@@ -1,0 +1,1 @@
+# This file makes the foot_models directory a Python package

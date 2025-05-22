@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barogrip UI Showcase</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f9fafb;
+    }
+    .preview-container {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      margin-bottom: 2rem;
+    }
+    .preview-header {
+      background-color: #4F46E5;
+      color: white;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .device-selector {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .device-button {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .device-button.active {
+      background-color: white;
+      color: #4F46E5;
+    }
+    .preview-frame {
+      width: 100%;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    .desktop {
+      height: 600px;
+    }
+    .tablet {
+      height: 600px;
+      max-width: 768px;
+      margin: 0 auto;
+    }
+    .mobile {
+      height: 600px;
+      max-width: 375px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body class="p-8">
+  <header class="max-w-6xl mx-auto mb-8">
+    <div class="flex items-center mb-2">
+      <div class="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xl font-bold mr-3">B</div>
+      <h1 class="text-3xl font-bold text-gray-900">Barogrip UI Showcase</h1>
+    </div>
+    <p class="text-gray-600 max-w-3xl">Here's a preview of the modernized Barogrip client interface with responsive designs for desktop, tablet, and mobile views.</p>
+  </header>
+
+  <main class="max-w-6xl mx-auto">
+    <!-- Login Preview -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold text-gray-900 mb-4">Login Screen</h2>
+      <div class="preview-container">
+        <div class="preview-header">
+          <span>Login Screen</span>
+          <div class="device-selector">
+            <div class="device-button active" data-target="login-frame" data-size="desktop">Desktop</div>
+            <div class="device-button" data-target="login-frame" data-size="tablet">Tablet</div>
+            <div class="device-button" data-target="login-frame" data-size="mobile">Mobile</div>
+          </div>
+        </div>
+        <div class="preview-content bg-white">
+          <iframe id="login-frame" class="preview-frame desktop" srcdoc='
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barogrip - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: #f9fafb;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="min-h-screen flex">
+    <!-- Login Form Side -->
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-8">
+      <div class="max-w-md w-full">
+        <div class="text-center mb-10">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-indigo-600 text-white text-xl font-bold mb-4">B</div>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome to Barogrip</h1>
+          <p class="text-gray-600">Sign in to your account to continue</p>
+        </div>
+        
+        <form class="space-y-6">
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="doctor@example.com" />
+          </div>
+          
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="••••••••" />
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <input type="checkbox" id="remember-me" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+              <label for="remember-me" class="ml-2 block text-sm text-gray-700">Remember me</label>
+            </div>
+            <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Forgot password?</a>
+          </div>
+          
+          <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Sign in
+          </button>
+        </form>
+        
+        <div class="mt-6 text-center">
+          <p class="text-sm text-gray-600">
+            Don't have an account? <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">Sign up</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Hero Image Side -->
+    <div class="hidden lg:block lg:w-1/2 bg-indigo-600 relative">
+      <div class="absolute inset-0 flex flex-col justify-center p-12 text-white">
+        <h2 class="text-4xl font-bold mb-6">Advanced Foot Scanning Technology</h2>
+        <p class="text-xl mb-8">Barogrip provides cutting-edge AI-powered foot scanning and analysis for podiatrists and patients.</p>
+        <ul class="space-y-4">
+          <li class="flex items-center">
+            <svg class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Precise 3D foot scanning
+          </li>
+          <li class="flex items-center">
+            <svg class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            AI-powered analysis
+          </li>
+          <li class="flex items-center">
+            <svg class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Orthotics recommendations
+          </li>
+          <li class="flex items-center">
+            <svg class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Patient progress tracking
+          </li>
+        </ul>
+      </div>
+      <div class="absolute bottom-4 right-4 text-white opacity-70 text-sm">
+        © 2025 Barogrip Medical Technologies
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+          '></iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard Preview -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold text-gray-900 mb-4">Doctor Dashboard</h2>
+      <div class="preview-container">
+        <div class="preview-header">
+          <span>Doctor Dashboard</span>
+          <div class="device-selector">
+            <div class="device-button active" data-target="dashboard-frame" data-size="desktop">Desktop</div>
+            <div class="device-button" data-target="dashboard-frame" data-size="tablet">Tablet</div>
+            <div class="device-button" data-target="dashboard-frame" data-size="mobile">Mobile</div>
+          </div>
+        </div>
+        <div class="preview-content bg-white">
+          <iframe id="dashboard-frame" class="preview-frame desktop" srcdoc='
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barogrip - Doctor Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: #f9fafb;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <div class="hidden md:flex md:flex-shrink-0">
+      <div class="flex flex-col w-64 bg-indigo-700">
+        <div class="flex items-center h-16 px-4 bg-indigo-800">
+          <div class="flex items-center">
+            <div class="flex items-center justify-center w-10 h-10 bg-white rounded-lg">
+              <span class="text-xl font-bold text-indigo-700">B</span>
+            </div>
+            <span class="ml-3 text-xl font-semibold text-white">Barogrip</span>
+          </div>
+        </div>
+        <div class="flex flex-col flex-grow px-4 pt-5 pb-4 overflow-y-auto">
+          <div class="flex-grow mt-5">
+            <nav class="flex-1 space-y-2">
+              <a href="#" class="flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-800 rounded-md">
+                <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                Dashboard
+              </a>
+              
+              <a href="#" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-100 hover:bg-indigo-600 rounded-md">
+                <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                Patients
+              </a>
+              
+              <a href="#" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-100 hover:bg-indigo-600 rounded-md">
+                <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Appointments
+              </a>
+              
+              <a href="#" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-100 hover:bg-indigo-600 rounded-md">
+                <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                Medical Records
+              </a>
+              
+              <a href="#" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-100 hover:bg-indigo-600 rounded-md">
+                <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Settings
+              </a>
+            </nav>
+          </div>
+          <div class="pt-4 pb-3 border-t border-indigo-800">
+            <div class="flex items-center px-4">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 rounded-full bg-indigo-900 flex items-center justify-center text-white font-semibold">
+                  DR
+                </div>
+              </div>
+              <div class="ml-3">
+                <div class="text-base font-medium text-white">Dr. Rebecca Chen</div>
+                <div class="text-sm font-medium text-indigo-200">drchen@barogrip.com</div>
+              </div>
+            </div>
+            <div class="mt-3 px-2">
+              <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-indigo-100 rounded-md hover:bg-indigo-600">
+                <svg class="mr-3 h-5 w-5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                Sign out
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="flex flex-col flex-1 overflow-hidden">
+      <!-- Top Navigation -->
+      <div class="bg-white shadow-sm z-10">
+        <div class="px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between h-16">
+            <div class="flex">
+              <div class="flex-shrink-0 flex items-center md:hidden">
+                <div class="flex items-center justify-center w-10 h-10 bg-indigo-600 rounded-lg">
+                  <span class="text-xl font-bold text-white">B</span>
+                </div>
+                <span class="ml-3 text-xl font-semibold text-gray-900">Barogrip</span>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <button class="p-2 text-gray-500 rounded-md md:hidden">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+              </button>
+              <div class="ml-4 relative flex-shrink-0">
+                <div class="flex items-center">
+                  <button class="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <div class="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-white font-semibold">
+                      DR
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Dashboard Content -->
+      <div class="flex-1 overflow-auto p-6">
+        <h1 class="text-2xl font-semibold text-gray-900 mb-6">Doctor Dashboard</h1>
+        
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 bg-indigo-100 rounded-md p-3">
+                  <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Total Patients</dt>
+                    <dd class="flex items-baseline">
+                      <div class="text-2xl font-semibold text-gray-900">28</div>
+                      <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                        <svg class="self-center flex-shrink-0 h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="sr-only">Increased by</span>
+                        4
+                      </div>
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                  <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                  </svg>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Scans Today</dt>
+                    <dd class="flex items-baseline">
+                      <div class="text-2xl font-semibold text-gray-900">7</div>
+                      <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                        <svg class="self-center flex-shrink-0 h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="sr-only">Increased by</span>
+                        2
+                      </div>
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                  <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">Upcoming Appointments</dt>
+                    <dd class="flex items-baseline">
+                      <div class="text-2xl font-semibold text-gray-900">12</div>
+                      <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                        <svg class="self-center flex-shrink-0 h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="sr-only">Increased by</span>
+                        3
+                      </div>
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 bg-purple-100 rounded-md p-3">
+                  <svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                  </svg>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt class="text-sm font-medium text-gray-500 truncate">AI Diagnosis Rate</dt>
+                    <dd class="flex items-baseline">
+                      <div class="text-2xl font-semibold text-gray-900">97%</div>
+                      <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                        <svg class="self-center flex-shrink-0 h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="sr-only">Increased by</span>
+                        2%
+                      </div>
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Recent Scans -->
+          <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+              <h3 class="text-lg font-medium leading-6 text-gray-900">Recent Foot Scans</h3>
+            </div>
+            <ul class="divide-y divide-gray-200">
+              <li class="px-4 py-4 sm:px-6">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <h4 class="text-sm font-medium text-gray-900">James Wilson</h4>
+                    <p class="text-sm text-gray-500">Completed 20 minutes ago</p>
+                  </div>
+                  <div class="ml-auto">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Complete
+                    </span>
+                  </div>
+                </div>
+              </li>
+              <li class="px-4 py-4 sm:px-6">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <h4 class="text-sm font-medium text-gray-900">Emily Chang</h4>
+                    <p class="text-sm text-gray-500">Completed 1 hour ago</p>
+                  </div>
+                  <div class="ml-auto">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Complete
+                    </span>
+                  </div>
+                </div>
+              </li>
+              <li class="px-4 py-4 sm:px-6">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <h4 class="text-sm font-medium text-gray-900">Robert Johnson</h4>
+                    <p class="text-sm text-gray-500">Completed 3 hours ago</p>
+                  </div>
+                  <div class="ml-auto">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Complete
+                    </span>
+                  </div>
+                </div>
+              </li>
+              <li class="px-4 py-4 sm:px-6">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                      <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <h4 class="text-sm font-medium text-gray-900">Sarah Miller</h4>
+                    <p class="text-sm text-gray-500">Processing</p>
+                  </div>
+                  <div class="ml-auto">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      Processing
+                    </span>
+                  </div>
+                </div>
+              </li>
+            </ul>
+            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+              <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">View all<span aria-hidden="true"> &rarr;</span></a>
+            </div>
+          </div>
+
+          <!-- Today's Appointments -->
+          <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+              <h3 class="text-lg font-medium leading-6 text-gray-900">Today's Appointments</h3>
+            </div>
+            <ul class="divide-y divide-gray-200">
+              <li class="px-4 py-4 sm:px-6">
+                <div class="flex items-center">
+                  <div class="min-w-0 flex-1 flex items-center">
+                    <div class="flex-shrink-0">
+                      <div class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-semibold">JD</div>
+                    </div>
+                    <div class="min-w-0 flex-1 px-4">
+                      <div>
+                        <p class="text-sm font-medium text-gray-900 truncate">John Doe</p>
+                        <p class="text-sm text-gray-500">Initial Consultation</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ml-5 flex-shrink-0">
+                    <div class="text-sm text-gray-900 font-medium">10:30 AM</div>
+                  </div>
+                </div>
+              </li>
+              <li class="px-4 py-4 sm:px-6">
+                <div class="flex items-center">
+                  <div class="min-w-0 flex-1 flex items-center">
+                    <div class="flex-shrink-0">
+                      <div class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-semibold">MT</div>
+                    </div>
+                    <div class="min-w-0 flex-1 px-4">
+                      <div>
+                        <p class="text-sm font-medium text-gray-900 truncate">Maria Thompson</p>
+                        <p class="text-sm text-gray-500">Follow-up Consultation</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ml-5 flex-shrink-0">
+                    <div class="text-sm text-gray-900 font-medium">1:15 PM</div>
+                  </div>
+                </div>
+              </li>
+              <li class="px-4 py-4 sm:px-6">
+                <div class="flex items-center">
+                  <div class="min-w-0 flex-1 flex items-center">
+                    <div class="flex-shrink-0">
+                      <div class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-semibold">RB</div>
+                    </div>
+                    <div class="min-w-0 flex-1 px-4">
+                      <div>
+                        <p class="text-sm font-medium text-gray-900 truncate">Robert Brown</p>
+                        <p class="text-sm text-gray-500">Orthotics Fitting</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ml-5 flex-shrink-0">
+                    <div class="text-sm text-gray-900 font-medium">3:00 PM</div>
+                  </div>
+                </div>
+              </li>
+              <li class="px-4 py-4 sm:px-6">
+                <div class="flex items-center">
+                  <div class="min-w-0 flex-1 flex items-center">
+                    <div class="flex-shrink-0">
+                      <div class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-semibold">AW</div>
+                    </div>
+                    <div class="min-w-0 flex-1 px-4">
+                      <div>
+                        <p class="text-sm font-medium text-gray-900 truncate">Alice Wong</p>
+                        <p class="text-sm text-gray-500">Follow-up Consultation</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ml-5 flex-shrink-0">
+                    <div class="text-sm text-gray-900 font-medium">4:30 PM</div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+            <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+              <a href="#" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">View all<span aria-hidden="true"> &rarr;</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+          '></iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- Patients Preview -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold text-gray-900 mb-4">Patient Management</h2>
+      <div class="preview-container">
+        <div class="preview-header">
+          <span>Patient Management</span>
+          <div class="device-selector">
+            <div class="device-button active" data-target="patients-frame" data-size="desktop">Desktop</div>
+            <div class="device-button" data-target="patients-frame" data-size="tablet">Tablet</div>
+            <div class="device-button" data-target="patients-frame" data-size="mobile">Mobile</div>
+          </div>
+        </div>
+        <div class="preview-content bg-white">
+          <iframe id="patients-frame" class="preview-frame desktop" srcdoc='
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barogrip - Patient Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+      background-color: #f9fafb;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar - Same as dashboard -->
+    <div class="hidden md:flex md:flex-shrink-0">
+      <div class="flex flex-col w-64 bg-indigo-700">
+        <div class="flex items-center h-16 px-4 bg-indigo-800">
+          <div class="flex items-center">
+            <div class="flex items-center justify-center w-10 h-10 bg-white rounded-lg">
+              <span class="text-xl font-bold text-indigo-700">B</span>
+            </div>
+            <span class="ml-3 text-xl font-semibold text-white">Barogrip</span>
+          </div>
+        </div>
+        <div class="flex flex-col flex-grow px-4 pt-5 pb-4 overflow-y-auto">
+          <div class="flex-grow mt-5">
+            <nav class="flex-1 space-y-2">
+              <a href="#" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-100 hover:bg-indigo-600 rounded-md">
+                <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                Dashboard
+              </a>
+              
+              <a href="#" class="flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-800 rounded-md">
+                <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                Patients
+              </a>
+              
+              <a href="#" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-100 hover:bg-indigo-600 rounded-md">
+                <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Appointments
+              </a>
+              
+              <a href="#" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-100 hover:bg-indigo-600 rounded-md">
+                <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                Medical Records
+              </a>
+              
+              <a href="#" class="flex items-center px-4 py-2 text-sm font-medium text-indigo-100 hover:bg-indigo-600 rounded-md">
+                <svg class="mr-3 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Settings
+              </a>
+            </nav>
+          </div>
+          <div class="pt-4 pb-3 border-t border-indigo-800">
+            <div class="flex items-center px-4">
+              <div class="flex-shrink-0">
+                <div class="w-10 h-10 rounded-full bg-indigo-900 flex items-center justify-center text-white font-semibold">
+                  DR
+                </div>
+              </div>
+              <div class="ml-3">
+                <div class="text-base font-medium text-white">Dr. Rebecca Chen</div>
+                <div class="text-sm font-medium text-indigo-200">drchen@barogrip.com</div>
+              </div>
+            </div>
+            <div class="mt-3 px-2">
+              <a href="#" class="flex items-center px-3 py-2 text-sm font-medium text-indigo-100 rounded-md hover:bg-indigo-600">
+                <svg class="mr-3 h-5 w-5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                Sign out
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="flex flex-col flex-1 overflow-hidden">
+      <!-- Top Navigation -->
+      <div class="bg-white shadow-sm z-10">
+        <div class="px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between h-16">
+            <div class="flex">
+              <div class="flex-shrink-0 flex items-center md:hidden">
+                <div class="flex items-center justify-center w-10 h-10 bg-indigo-600 rounded-lg">
+                  <span class="text-xl font-bold text-white">B</span>
+                </div>
+                <span class="ml-3 text-xl font-semibold text-gray-900">Barogrip</span>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <button class="p-2 text-gray-500 rounded-md md:hidden">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+              </button>
+              <div class="ml-4 relative flex-shrink-0">
+                <div class="flex items-center">
+                  <button class="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <div class="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-white font-semibold">
+                      DR
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Patients Content -->
+      <div class="flex-1 overflow-auto p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-2xl font-semibold text-gray-900">Patient Management</h1>
+          <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <svg class="mr-2 -ml-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Add New Patient
+          </button>
+        </div>
+        
+        <!-- Search and Filters -->
+        <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+          <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+              <label for="search" class="sr-only">Search</label>
+              <div class="relative rounded-md shadow-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div>
+                <input type="text" name="search" id="search" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="Search patients by name, email, or ID">
+              </div>
+            </div>
+            <div class="w-full md:w-1/4">
+              <label for="status" class="sr-only">Filter by Status</label>
+              <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                <option value="">All Patients</option>
+                <option value="active">Active Patients</option>
+                <option value="recent">Recent Patients</option>
+                <option value="inactive">Inactive Patients</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Patient List -->
+        <div class="bg-white shadow overflow-hidden rounded-lg">
+          <div class="sm:flex sm:items-center px-6 py-4 border-b border-gray-200">
+            <div class="sm:flex-1">
+              <h3 class="text-lg leading-6 font-medium text-gray-900">Patients</h3>
+              <p class="mt-1 text-sm text-gray-500">A list of all the patients in your practice.</p>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contact Info
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Last Visit
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Scan Status
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Next Appointment
+                  </th>
+                  <th scope="col" class="relative px-6 py-3">
+                    <span class="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-800 font-semibold">
+                        JW
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">James Wilson</div>
+                        <div class="text-sm text-gray-500">ID: #PAT20250032</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">james.wilson@example.com</div>
+                    <div class="text-sm text-gray-500">+1 (555) 123-4567</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">May 19, 2025</div>
+                    <div class="text-sm text-gray-500">10:30 AM</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      Scan Completed
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    June 2, 2025
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4">View</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Edit</a>
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-800 font-semibold">
+                        EC
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Emily Chang</div>
+                        <div class="text-sm text-gray-500">ID: #PAT20250028</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">emily.chang@example.com</div>
+                    <div class="text-sm text-gray-500">+1 (555) 987-6543</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">May 18, 2025</div>
+                    <div class="text-sm text-gray-500">2:15 PM</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      Scan Completed
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    June 15, 2025
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4">View</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Edit</a>
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-800 font-semibold">
+                        RJ
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Robert Johnson</div>
+                        <div class="text-sm text-gray-500">ID: #PAT20250019</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">robert.johnson@example.com</div>
+                    <div class="text-sm text-gray-500">+1 (555) 765-4321</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">May 15, 2025</div>
+                    <div class="text-sm text-gray-500">11:00 AM</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      Scan Completed
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    -
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4">View</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Edit</a>
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-800 font-semibold">
+                        SM
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">Sarah Miller</div>
+                        <div class="text-sm text-gray-500">ID: #PAT20250034</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">sarah.miller@example.com</div>
+                    <div class="text-sm text-gray-500">+1 (555) 456-7890</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">Today</div>
+                    <div class="text-sm text-gray-500">9:45 AM</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      Processing
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    -
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-4">View</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Edit</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+            <nav class="flex items-center justify-between">
+              <div class="flex-1 flex justify-between sm:hidden">
+                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                  Previous
+                </a>
+                <a href="#" class="relative ml-3 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                  Next
+                </a>
+              </div>
+              <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p class="text-sm text-gray-700">
+                    Showing <span class="font-medium">1</span> to <span class="font-medium">5</span> of <span class="font-medium">28</span> patients
+                  </p>
+                </div>
+                <div>
+                  <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                      <span class="sr-only">Previous</span>
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-indigo-100 text-sm font-medium text-indigo-600 hover:bg-indigo-50">
+                      1
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      2
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      3
+                    </a>
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                      ...
+                    </span>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      6
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                      <span class="sr-only">Next</span>
+                      <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                      </svg>
+                    </a>
+                  </nav>
+                </div>
+              </div>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+          '></iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Device view switcher
+    document.querySelectorAll('.device-button').forEach(button => {
+      button.addEventListener('click', () => {
+        const targetId = button.getAttribute('data-target');
+        const size = button.getAttribute('data-size');
+        const frame = document.getElementById(targetId);
+        
+        // Remove active class from all buttons in the same group
+        button.parentNode.querySelectorAll('.device-button').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        
+        // Add active class to clicked button
+        button.classList.add('active');
+        
+        // Update iframe class based on selected size
+        frame.classList.remove('desktop', 'tablet', 'mobile');
+        frame.classList.add(size);
+      });
+    });
+  </script>
+</body>
+</html>

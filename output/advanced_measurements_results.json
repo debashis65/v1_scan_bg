@@ -1,0 +1,110 @@
+{
+  "chippaux_smirak_index": {
+    "value": {
+      "right": 0.0,
+      "left": 0.0
+    },
+    "unit": "percent",
+    "normal_range": "30-45%",
+    "interpretation": {
+      "right": "high arch (pes cavus)",
+      "left": "high arch (pes cavus)"
+    },
+    "clinical_use": "Footprint-based arch assessment",
+    "treatment_implications": "High values may indicate need for medial arch support"
+  },
+  "valgus_index": {
+    "value": {
+      "right": 13.1,
+      "left": 4.9
+    },
+    "unit": "percent",
+    "normal_range": "5-15%",
+    "interpretation": {
+      "right": "normal foot",
+      "left": "varus foot"
+    },
+    "clinical_use": "Assessment of pronation/supination tendency",
+    "treatment_implications": "Guides lateral or medial posting in orthotics"
+  },
+  "arch_angle": {
+    "value": {
+      "right": 41.3,
+      "left": 33.1
+    },
+    "unit": "degrees",
+    "normal_range": "35-45\u00b0",
+    "interpretation": {
+      "right": "normal arch",
+      "left": "low arch (pes planus)"
+    },
+    "clinical_use": "Footprint-based arch assessment",
+    "treatment_implications": "Guides arch support height in orthotics"
+  },
+  "foot_posture_index": {
+    "value": -3,
+    "unit": "score",
+    "components": {
+      "talar_head": -1,
+      "malleolar_curvature": 1,
+      "calcaneal_position": -2,
+      "talonavicular_bulge": 1,
+      "mla_congruence": 0,
+      "forefoot_alignment": -2
+    },
+    "normal_range": "0 to +5",
+    "interpretation": "neutral",
+    "clinical_use": "Comprehensive foot posture assessment",
+    "treatment_implications": "Guides orthotic prescription and footwear recommendations"
+  },
+  "photoplethysmography": {
+    "pulse_amplitude": 1.5,
+    "perfusion_index": 0.9,
+    "vascularity_score": 10.0,
+    "temperature_differential": -2.5,
+    "confidence": 0.93,
+    "unit": "score",
+    "normal_range": "4-7",
+    "interpretation": "excellent peripheral circulation",
+    "clinical_use": "Assessment of peripheral vascular health and circulation",
+    "treatment_implications": "No intervention required; optimal vascular health"
+  },
+  "regional_perfusion": {
+    "dorsal_medial": {
+      "perfusion_index": 0.87,
+      "amplitude": 1.5,
+      "relative_temperature": -2.5,
+      "confidence": 0.95
+    },
+    "dorsal_lateral": {
+      "perfusion_index": 0.88,
+      "amplitude": 1.5,
+      "relative_temperature": -3.0,
+      "confidence": 0.95
+    },
+    "plantar_arch": {
+      "perfusion_index": 0.78,
+      "amplitude": 1.5,
+      "relative_temperature": -3.0,
+      "confidence": 0.95
+    },
+    "first_metatarsal": {
+      "perfusion_index": 0.96,
+      "amplitude": 1.5,
+      "relative_temperature": -2.0,
+      "confidence": 0.95
+    },
+    "fifth_metatarsal": {
+      "perfusion_index": 0.96,
+      "amplitude": 1.5,
+      "relative_temperature": -2.3,
+      "confidence": 0.95
+    },
+    "hallux": {
+      "perfusion_index": 1.0,
+      "amplitude": 1.5,
+      "relative_temperature": -2.0,
+      "confidence": 0.82
+    }
+  }
+}

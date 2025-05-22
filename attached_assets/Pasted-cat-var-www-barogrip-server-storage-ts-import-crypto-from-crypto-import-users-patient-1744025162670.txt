@@ -1,0 +1,717 @@
+cat /var/www/barogrip/server/storage.ts
+import crypto from 'crypto';
+import {
+  users,
+  patientProfiles,
+  doctorProfiles,
+  scans,
+  prescriptions,
+  scanImages,
+  consultations,
+  apiKeys,
+  type User,
+  type InsertUser,
+  type PatientProfile,
+  type InsertPatientProfile,
+  type DoctorProfile,
+  type InsertDoctorProfile,
+  type Scan,
+  type InsertScan,
+  type Prescription,
+  type InsertPrescription,
+  type ScanImage,
+  type InsertScanImage,
+  type Consultation,
+  type InsertConsultation,
+} from "../shared/schema";
+import { ScanStatus, UserRole } from "../shared/constants";
+import { db } from "./db";
+import { and, asc, eq, inArray, like, sql, desc, or, isNull, ne } from "drizzle-orm";
+import connectPg from "connect-pg-simple";
+import session from "express-session";
+import { pool } from "./db";
+
+const PostgresSessionStore = connectPg(session);
+
+export interface IStorage {
+  // User methods
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(insertUser: InsertUser): Promise<User>;
+  updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
+  updateUserSession(id: number, token: string, expiry: Date): Promise<User | undefined>;
+  clearUserSession(id: number): Promise<void>;
+  validateUserRole(userId: number, role: UserRole): Promise<boolean>;
+  validateApiKey(apiKey: string): Promise<boolean>;
+  getApiKeyData(apiKey: string): Promise<{ userId: number, role: UserRole } | undefined>;
+  generateApiKey(userId: number, description: string): Promise<string>;
+  revokeApiKey(apiKey: string): Promise<boolean>;
+  
+  // Patient profile methods
+  getPatientProfile(userId: number): Promise<PatientProfile | undefined>;
+  createPatientProfile(profile: InsertPatientProfile): Promise<PatientProfile>;
+  updatePatientProfile(userId: number, profile: Partial<PatientProfile>): Promise<PatientProfile | undefined>;
+  
+  // Doctor profile methods
+  getDoctorProfile(userId: number): Promise<DoctorProfile | undefined>;
+  createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile>;
+  updateDoctorProfile(userId: number, profile: Partial<DoctorProfile>): Promise<DoctorProfile | undefined>;
+  
+  // Scan methods
+  createScan(scan: InsertScan): Promise<Scan>;
+  getScan(id: number): Promise<Scan | undefined>;
+  getPatientScans(patientId: number): Promise<Scan[]>;
+  getPatientScansByStatus(patientId: number, status: ScanStatus | ScanStatus[]): Promise<Scan[]>;
+  getRecentScans(limit: number): Promise<Scan[]>;
+  updateScan(id: number, updates: Partial<Scan>): Promise<Scan | undefined>;
+  updateScanStatus(id: number, status: ScanStatus, message?: string): Promise<Scan | undefined>;
+  retryScan(id: number): Promise<Scan | undefined>;
+  getScansInProcessing(): Promise<Scan[]>;
+  searchScans(query: string, patientId?: number, status?: ScanStatus[]): Promise<Scan[]>;
+  encryptScanData(id: number): Promise<boolean>;
+  decryptScanData(id: number, accessToken: string): Promise<boolean>;
+  
+  // Prescription methods
+  createPrescription(prescription: InsertPrescription): Promise<Prescription>;
+  getPatientPrescriptions(patientId: number): Promise<Prescription[]>;
+  getScanPrescriptions(scanId: number): Promise<Prescription[]>;
+  exportPrescriptionToPDF(id: number): Promise<string>; // Returns the file URL
+  exportPrescriptionToCSV(id: number): Promise<string>; // Returns the file URL
+  exportPatientScansToCSV(patientId: number): Promise<string>; // Returns the file URL
+  
+  // Scan image methods
+  addScanImage(image: InsertScanImage): Promise<ScanImage>;
+  getScanImages(scanId: number): Promise<ScanImage[]>;
+  getScanImagesCount(scanId: number): Promise<number>;
+  
+  // Consultation methods
+  createConsultation(consultation: InsertConsultation): Promise<Consultation>;
+  getConsultation(id: number): Promise<Consultation | undefined>;
+  getDoctorConsultations(doctorId: number): Promise<Consultation[]>;
+  getPatientConsultations(patientId: number): Promise<Consultation[]>;
+  updateConsultation(id: number, updates: Partial<Consultation>): Promise<Consultation | undefined>;
+  getUpcomingConsultations(userId: number, role: UserRole): Promise<Consultation[]>;
+  
+  // Session store
+  sessionStore: any;
+}
+
+export class DatabaseStorage implements IStorage {
+  sessionStore: any;
+  
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
+    });
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async updateUserSession(id: number, token: string, expiry: Date): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        sessionToken: token,
+        sessionExpiry: expiry,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async clearUserSession(id: number): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        sessionToken: null,
+        sessionExpiry: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id));
+  }
+
+  async validateUserRole(userId: number, role: UserRole): Promise<boolean> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(and(
+        eq(users.id, userId),
+        eq(users.role, role)
+      ));
+    return !!user;
+  }
+
+  async getPatientProfile(userId: number): Promise<PatientProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(patientProfiles)
+      .where(eq(patientProfiles.userId, userId));
+    return profile;
+  }
+
+  async createPatientProfile(profile: InsertPatientProfile): Promise<PatientProfile> {
+    const [createdProfile] = await db
+      .insert(patientProfiles)
+      .values(profile)
+      .returning();
+    return createdProfile;
+  }
+
+  async updatePatientProfile(
+    userId: number,
+    profile: Partial<PatientProfile>
+  ): Promise<PatientProfile | undefined> {
+    const [updatedProfile] = await db
+      .update(patientProfiles)
+      .set({
+        ...profile,
+        updatedAt: new Date(),
+      })
+      .where(eq(patientProfiles.userId, userId))
+      .returning();
+    return updatedProfile;
+  }
+
+  async getDoctorProfile(userId: number): Promise<DoctorProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(doctorProfiles)
+      .where(eq(doctorProfiles.userId, userId));
+    return profile;
+  }
+
+  async createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile> {
+    const [createdProfile] = await db
+      .insert(doctorProfiles)
+      .values(profile)
+      .returning();
+    return createdProfile;
+  }
+
+  async updateDoctorProfile(
+    userId: number,
+    profile: Partial<DoctorProfile>
+  ): Promise<DoctorProfile | undefined> {
+    const [updatedProfile] = await db
+      .update(doctorProfiles)
+      .set({
+        ...profile,
+        updatedAt: new Date(),
+      })
+      .where(eq(doctorProfiles.userId, userId))
+      .returning();
+    return updatedProfile;
+  }
+
+  async createScan(scan: InsertScan): Promise<Scan> {
+    const [createdScan] = await db.insert(scans).values(scan).returning();
+    return createdScan;
+  }
+
+  async getScan(id: number): Promise<Scan | undefined> {
+    const [scan] = await db.select().from(scans).where(eq(scans.id, id));
+    return scan;
+  }
+
+  async getPatientScans(patientId: number): Promise<Scan[]> {
+    const patientScans = await db
+      .select()
+      .from(scans)
+      .where(eq(scans.patientId, patientId))
+      .orderBy(desc(scans.createdAt));
+    return patientScans;
+  }
+
+  async getRecentScans(limit: number): Promise<Scan[]> {
+    const recentScans = await db
+      .select()
+      .from(scans)
+      .orderBy(desc(scans.createdAt))
+      .limit(limit);
+    return recentScans;
+  }
+
+  async updateScan(id: number, updates: Partial<Scan>): Promise<Scan | undefined> {
+    const [updatedScan] = await db
+      .update(scans)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(scans.id, id))
+      .returning();
+    return updatedScan;
+  }
+
+  async updateScanStatus(id: number, status: ScanStatus, message?: string): Promise<Scan | undefined> {
+    const updates: any = {
+      status,
+      updatedAt: new Date(),
+    };
+
+    if (message) {
+      updates.statusMessage = message;
+    }
+
+    // Set timestamps based on status
+    if (status === ScanStatus.PROCESSING) {
+      updates.processStartedAt = new Date();
+    } else if (
+      status === ScanStatus.COMPLETED ||
+      status === ScanStatus.FAILED
+    ) {
+      updates.processCompletedAt = new Date();
+    }
+
+    const [updatedScan] = await db
+      .update(scans)
+      .set(updates)
+      .where(eq(scans.id, id))
+      .returning();
+    return updatedScan;
+  }
+
+  async retryScan(id: number): Promise<Scan | undefined> {
+    const [scan] = await db
+      .select()
+      .from(scans)
+      .where(eq(scans.id, id));
+
+    if (!scan || scan.status !== ScanStatus.FAILED) {
+      return undefined;
+    }
+
+    const [updatedScan] = await db
+      .update(scans)
+      .set({
+        status: ScanStatus.QUEUED,
+        statusMessage: 'Retry requested',
+        retryCount: (scan.retryCount || 0) + 1,
+        processStartedAt: null,
+        processCompletedAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(scans.id, id))
+      .returning();
+    return updatedScan;
+  }
+
+  async getPatientScansByStatus(patientId: number, status: ScanStatus | ScanStatus[]): Promise<Scan[]> {
+    if (Array.isArray(status)) {
+      return db
+        .select()
+        .from(scans)
+        .where(
+          and(
+            eq(scans.patientId, patientId),
+            inArray(scans.status, status as string[])
+          )
+        )
+        .orderBy(desc(scans.createdAt));
+    }
+
+    return db
+      .select()
+      .from(scans)
+      .where(
+        and(
+          eq(scans.patientId, patientId),
+          eq(scans.status, status)
+        )
+      )
+      .orderBy(desc(scans.createdAt));
+  }
+
+  async getScansInProcessing(): Promise<Scan[]> {
+    // Find scans that have been in processing status for more than 1 hour
+    // These might be stuck and require manual intervention
+    const oneHourAgo = new Date();
+    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+
+    return db
+      .select()
+      .from(scans)
+      .where(
+        and(
+          eq(scans.status, ScanStatus.PROCESSING),
+          sql`${scans.processStartedAt} < ${oneHourAgo}`
+        )
+      )
+      .orderBy(asc(scans.processStartedAt));
+  }
+
+  async searchScans(query: string, patientId?: number, status?: ScanStatus[]): Promise<Scan[]> {
+    const conditions = [];
+
+    // Add search condition
+    if (query && query.trim() !== '') {
+      conditions.push(
+        or(
+          like(scans.aiDiagnosis, `%${query}%`),
+          like(scans.doctorNotes, `%${query}%`),
+          like(scans.statusMessage, `%${query}%`)
+        )
+      );
+    }
+
+    // Add patient condition if specified
+    if (patientId) {
+      conditions.push(eq(scans.patientId, patientId));
+    }
+
+    // Add status condition if specified
+    if (status && status.length > 0) {
+      conditions.push(inArray(scans.status, status as string[]));
+    }
+
+    // If no conditions were added, return all scans
+    if (conditions.length === 0) {
+      return db
+        .select()
+        .from(scans)
+        .orderBy(desc(scans.createdAt))
+        .limit(100);
+    }
+
+    // Build AND of all conditions
+    return db
+      .select()
+      .from(scans)
+      .where(and(...conditions))
+      .orderBy(desc(scans.createdAt))
+      .limit(100);
+  }
+
+  async getScanImagesCount(scanId: number): Promise<number> {
+    const images = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(scanImages)
+      .where(eq(scanImages.scanId, scanId));
+    
+    return images[0]?.count || 0;
+  }
+
+  async encryptScanData(id: number): Promise<boolean> {
+    try {
+      // Simulated encryption for now
+      const [updatedScan] = await db
+        .update(scans)
+        .set({
+          isEncrypted: true,
+          encryptionDetails: JSON.stringify({
+            encryptedAt: new Date(),
+            algorithm: 'AES-256-GCM',
+          }),
+          updatedAt: new Date(),
+        })
+        .where(eq(scans.id, id))
+        .returning();
+      return !!updatedScan;
+    } catch (error) {
+      console.error('Error encrypting scan data:', error);
+      return false;
+    }
+  }
+
+  async decryptScanData(id: number, accessToken: string): Promise<boolean> {
+    try {
+      // Validate access token logic would go here
+      const [updatedScan] = await db
+        .update(scans)
+        .set({
+          isEncrypted: false,
+          encryptionDetails: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(scans.id, id))
+        .returning();
+      return !!updatedScan;
+    } catch (error) {
+      console.error('Error decrypting scan data:', error);
+      return false;
+    }
+  }
+
+  async exportPrescriptionToPDF(id: number): Promise<string> {
+    // Simulated PDF export - in real implementation this would use a PDF library
+    return `/api/prescriptions/${id}/pdf`;
+  }
+
+  async exportPrescriptionToCSV(id: number): Promise<string> {
+    // Simulated CSV export
+    return `/api/prescriptions/${id}/csv`;
+  }
+
+  async exportPatientScansToCSV(patientId: number): Promise<string> {
+    // Simulated CSV export
+    return `/api/patients/${patientId}/scans/csv`;
+  }
+
+  async createPrescription(prescription: InsertPrescription): Promise<Prescription> {
+    const [createdPrescription] = await db
+      .insert(prescriptions)
+      .values(prescription)
+      .returning();
+    return createdPrescription;
+  }
+
+  async getPatientPrescriptions(patientId: number): Promise<Prescription[]> {
+    return db
+      .select()
+      .from(prescriptions)
+      .where(eq(prescriptions.patientId, patientId))
+      .orderBy(desc(prescriptions.createdAt));
+  }
+
+  async getScanPrescriptions(scanId: number): Promise<Prescription[]> {
+    return db
+      .select()
+      .from(prescriptions)
+      .where(eq(prescriptions.scanId, scanId))
+      .orderBy(desc(prescriptions.createdAt));
+  }
+
+  async addScanImage(image: InsertScanImage): Promise<ScanImage> {
+    const [createdImage] = await db
+      .insert(scanImages)
+      .values(image)
+      .returning();
+    return createdImage;
+  }
+
+  async getScanImages(scanId: number): Promise<ScanImage[]> {
+    return db
+      .select()
+      .from(scanImages)
+      .where(eq(scanImages.scanId, scanId));
+  }
+
+  async createConsultation(consultation: InsertConsultation): Promise<Consultation> {
+    const [createdConsultation] = await db
+      .insert(consultations)
+      .values(consultation)
+      .returning();
+    return createdConsultation;
+  }
+
+  async getConsultation(id: number): Promise<Consultation | undefined> {
+    const [consultation] = await db
+      .select()
+      .from(consultations)
+      .where(eq(consultations.id, id));
+    return consultation;
+  }
+
+  async getDoctorConsultations(doctorId: number): Promise<Consultation[]> {
+    return db
+      .select()
+      .from(consultations)
+      .where(eq(consultations.doctorId, doctorId))
+      .orderBy(desc(consultations.scheduledTime));
+  }
+
+  async getPatientConsultations(patientId: number): Promise<Consultation[]> {
+    return db
+      .select()
+      .from(consultations)
+      .where(eq(consultations.patientId, patientId))
+      .orderBy(desc(consultations.scheduledTime));
+  }
+
+  async updateConsultation(id: number, updates: Partial<Consultation>): Promise<Consultation | undefined> {
+    const [updatedConsultation] = await db
+      .update(consultations)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(consultations.id, id))
+      .returning();
+    return updatedConsultation;
+  }
+
+  async getUpcomingConsultations(userId: number, role: UserRole): Promise<Consultation[]> {
+    const query = role === UserRole.DOCTOR 
+      ? eq(consultations.doctorId, userId)
+      : eq(consultations.patientId, userId);
+    
+    // Calculate current date
+    const now = new Date();
+    
+    return db
+      .select()
+      .from(consultations)
+      .where(and(
+        query,
+        sql`${consultations.scheduledTime} > ${now}`
+      ))
+      .orderBy(asc(consultations.scheduledTime))
+      .limit(10);
+  }
+
+  // API key methods
+  async validateApiKey(apiKey: string): Promise<boolean> {
+    try {
+      const [key] = await db
+        .select()
+        .from(apiKeys)
+        .where(and(
+          eq(apiKeys.apiKey, apiKey),
+          eq(apiKeys.isActive, true),
+          or(
+            isNull(apiKeys.expiresAt),
+            sql`${apiKeys.expiresAt} > NOW()`
+          )
+        ));
+      
+      if (!key) {
+        return false;
+      }
+      
+      // Update last used timestamp
+      await db
+        .update(apiKeys)
+        .set({
+          lastUsed: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(apiKeys.id, key.id));
+      
+      return true;
+    } catch (error) {
+      console.error('Error validating API key:', error);
+      return false;
+    }
+  }
+  
+  async getApiKeyData(apiKey: string): Promise<{ userId: number, role: UserRole } | undefined> {
+    try {
+      const [key] = await db
+        .select()
+        .from(apiKeys)
+        .where(and(
+          eq(apiKeys.apiKey, apiKey),
+          eq(apiKeys.isActive, true),
+          or(
+            isNull(apiKeys.expiresAt),
+            sql`${apiKeys.expiresAt} > NOW()`
+          )
+        ));
+      
+      if (!key) {
+        return undefined;
+      }
+      
+      // Get user information to include role
+      const user = await this.getUser(key.userId);
+      if (!user) {
+        return undefined;
+      }
+      
+      return {
+        userId: key.userId,
+        role: user.role as UserRole,
+      };
+    } catch (error) {
+      console.error('Error getting API key data:', error);
+      return undefined;
+    }
+  }
+  
+  async generateApiKey(userId: number, description: string): Promise<string> {
+    try {
+      // Generate a secure random API key
+      const apiKeyBytes = crypto.randomBytes(32);
+      const apiKey = apiKeyBytes.toString('hex');
+      
+      // Create a record in the database
+      const [keyRecord] = await db
+        .insert(apiKeys)
+        .values({
+          userId,
+          apiKey,
+          description,
+          isActive: true,
+          // Default permissions and IP restrictions can be set here
+          permissions: JSON.stringify(['read']), // Default to read-only
+          ipRestrictions: JSON.stringify([]), // No IP restrictions by default
+          // Set expiry one year from now by default
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+      
+      return apiKey;
+    } catch (error) {
+      console.error('Error generating API key:', error);
+      throw new Error('Failed to generate API key');
+    }
+  }
+  
+  async revokeApiKey(apiKey: string): Promise<boolean> {
+    try {
+      // Update the API key to be inactive
+      const result = await db
+        .update(apiKeys)
+        .set({
+          isActive: false,
+          updatedAt: new Date(),
+        })
+        .where(eq(apiKeys.apiKey, apiKey))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error revoking API key:', error);
+      return false;
+    }
+  }
+}
+
+export const storage = new DatabaseStorage();

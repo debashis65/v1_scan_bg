@@ -1,0 +1,27 @@
+sudo -u postgres psql -d barogrip_db -c "\d users"
+                                          Table "public.users"
+     Column     |            Type             | Collation | Nullable |              Default              
+----------------+-----------------------------+-----------+----------+-----------------------------------
+ id             | integer                     |           | not null | nextval('users_id_seq'::regclass)
+ username       | text                        |           | not null | 
+ email          | text                        |           | not null | 
+ password       | text                        |           | not null | 
+ full_name      | text                        |           | not null | 
+ role           | text                        |           | not null | 'patient'::text
+ session_token  | text                        |           |          | 
+ session_expiry | timestamp without time zone |           |          | 
+ created_at     | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at     | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+    "users_email_key" UNIQUE CONSTRAINT, btree (email)
+    "users_username_key" UNIQUE CONSTRAINT, btree (username)
+Referenced by:
+    TABLE "consultations" CONSTRAINT "consultations_doctor_id_fkey" FOREIGN KEY (doctor_id) REFERENCES users(id)
+    TABLE "consultations" CONSTRAINT "consultations_patient_id_fkey" FOREIGN KEY (patient_id) REFERENCES users(id)
+    TABLE "doctor_profiles" CONSTRAINT "doctor_profiles_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "patient_profiles" CONSTRAINT "patient_profiles_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "prescriptions" CONSTRAINT "prescriptions_doctor_id_fkey" FOREIGN KEY (doctor_id) REFERENCES users(id)
+    TABLE "prescriptions" CONSTRAINT "prescriptions_patient_id_fkey" FOREIGN KEY (patient_id) REFERENCES users(id)
+    TABLE "scans" CONSTRAINT "scans_doctor_id_fkey" FOREIGN KEY (doctor_id) REFERENCES users(id)
+    TABLE "scans" CONSTRAINT "scans_patient_id_fkey" FOREIGN KEY (patient_id) REFERENCES users(id)

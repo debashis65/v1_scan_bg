@@ -1,0 +1,61 @@
+pm2 logs barogrip-server --lines 30
+[TAILING] Tailing last 30 lines for [barogrip-server] process (change the value with --lines option)
+/root/.pm2/logs/barogrip-server-out.log last 30 lines:
+2|barogrip | Barogrip API server running on port 3000
+2|barogrip | Environment: development
+2|barogrip | Database: neondb
+2|barogrip | Note: API is not directly accessible, client proxy at https://(unknown domain) handles API requests
+2|barogrip | Barogrip API server running on port 3000
+2|barogrip | Environment: development
+2|barogrip | Database: neondb
+2|barogrip | Note: API is not directly accessible, client proxy at https://(unknown domain) handles API requests
+2|barogrip | SIGINT received, shutting down gracefully
+2|barogrip | Server closed
+2|barogrip | Barogrip API server running on port 3000
+2|barogrip | Environment: development
+2|barogrip | Database: neondb
+2|barogrip | Note: API is not directly accessible, client proxy at https://(unknown domain) handles API requests
+2|barogrip | SIGINT received, shutting down gracefully
+2|barogrip | Server closed
+2|barogrip | Barogrip API server running on port 3000
+2|barogrip | Environment: development
+2|barogrip | Database: neondb
+2|barogrip | Note: API is not directly accessible, client proxy at https://(unknown domain) handles API requests
+2|barogrip | SIGINT received, shutting down gracefully
+2|barogrip | Server closed
+2|barogrip | Barogrip API server running on port 3000
+2|barogrip | Environment: development
+2|barogrip | Database: neondb
+2|barogrip | Note: API is not directly accessible, client proxy at https://(unknown domain) handles API requests
+
+/root/.pm2/logs/barogrip-server-error.log last 30 lines:
+2|barogrip | error: password authentication failed for user "postgres"
+2|barogrip |     at /var/www/barogrip/node_modules/pg-pool/index.js:45:11
+2|barogrip |     at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2|barogrip |     at async /var/www/barogrip/node_modules/src/node-postgres/session.ts:144:19
+2|barogrip |     at async DatabaseStorage.getUserByEmail (/var/www/barogrip/server/storage.ts:126:20)
+2|barogrip |     at async Strategy._verify (/var/www/barogrip/server/auth.ts:103:24)
+2|barogrip | error: password authentication failed for user "postgres"
+2|barogrip |     at /var/www/barogrip/node_modules/pg-pool/index.js:45:11
+2|barogrip |     at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2|barogrip |     at async /var/www/barogrip/node_modules/src/node-postgres/session.ts:144:19
+2|barogrip |     at async DatabaseStorage.getUserByEmail (/var/www/barogrip/server/storage.ts:126:20)
+2|barogrip |     at async /var/www/barogrip/server/auth.ts:130:29
+2|barogrip | error: password authentication failed for user "postgres"
+2|barogrip |     at /var/www/barogrip/node_modules/pg-pool/index.js:45:11
+2|barogrip |     at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2|barogrip |     at async /var/www/barogrip/node_modules/src/node-postgres/session.ts:144:19
+2|barogrip |     at async DatabaseStorage.getUserByEmail (/var/www/barogrip/server/storage.ts:126:20)
+2|barogrip |     at async Strategy._verify (/var/www/barogrip/server/auth.ts:103:24)
+2|barogrip | error: password authentication failed for user "postgres"
+2|barogrip |     at /var/www/barogrip/node_modules/pg-pool/index.js:45:11
+2|barogrip |     at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2|barogrip |     at async /var/www/barogrip/node_modules/src/node-postgres/session.ts:144:19
+2|barogrip |     at async DatabaseStorage.getUserByEmail (/var/www/barogrip/server/storage.ts:126:20)
+2|barogrip |     at async Strategy._verify (/var/www/barogrip/server/auth.ts:103:24)
+2|barogrip | error: password authentication failed for user "postgres"
+2|barogrip |     at /var/www/barogrip/node_modules/pg-pool/index.js:45:11
+2|barogrip |     at processTicksAndRejections (node:internal/process/task_queues:95:5)
+2|barogrip |     at async /var/www/barogrip/node_modules/src/node-postgres/session.ts:144:19
+2|barogrip |     at async DatabaseStorage.getUserByEmail (/var/www/barogrip/server/storage.ts:126:20)
+2|barogrip |     at async Strategy._verify (/var/www/barogrip/server/auth.ts:103:24)

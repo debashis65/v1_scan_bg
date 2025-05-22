@@ -1,0 +1,982 @@
+import crypto from 'crypto';
+import {
+  users,
+  patientProfiles,
+  doctorProfiles,
+  scans,
+  prescriptions,
+  scanImages,
+  consultations,
+  apiKeys,
+  type User,
+  type InsertUser,
+  type PatientProfile,
+  type InsertPatientProfile,
+  type DoctorProfile,
+  type InsertDoctorProfile,
+  type Scan,
+  type InsertScan,
+  type Prescription,
+  type InsertPrescription,
+  type ScanImage,
+  type InsertScanImage,
+  type Consultation,
+  type InsertConsultation,
+  type ApiKey,
+  type InsertApiKey,
+} from "../shared/schema";
+import { ScanStatus, ErrorType, UserRole } from "../shared/constants";
+import { db } from "./db";
+import { eq, and, desc, asc, sql, like, or, ne, isNull } from "drizzle-orm";
+import session from "express-session";
+import * as connectPgModule from "connect-pg-simple";
+import { pool } from "./db";
+
+// PostgreSQL session store
+const connectPg = connectPgModule.default;
+const PostgresSessionStore = connectPg(session);
+
+export interface IStorage {
+  // User methods
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(insertUser: InsertUser): Promise<User>;
+  updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
+  updateUserSession(id: number, token: string, expiry: Date): Promise<User | undefined>;
+  clearUserSession(id: number): Promise<void>;
+  validateUserRole(userId: number, role: UserRole): Promise<boolean>;
+  validateApiKey(apiKey: string): Promise<boolean>;
+  getApiKeyData(apiKey: string): Promise<{ userId: number, role: UserRole } | undefined>;
+  generateApiKey(userId: number, description: string): Promise<string>;
+  revokeApiKey(apiKey: string): Promise<boolean>;
+  
+  // Patient profile methods
+  getPatientProfile(userId: number): Promise<PatientProfile | undefined>;
+  createPatientProfile(profile: InsertPatientProfile): Promise<PatientProfile>;
+  updatePatientProfile(userId: number, profile: Partial<PatientProfile>): Promise<PatientProfile | undefined>;
+  
+  // Doctor profile methods
+  getDoctorProfile(userId: number): Promise<DoctorProfile | undefined>;
+  createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile>;
+  updateDoctorProfile(userId: number, profile: Partial<DoctorProfile>): Promise<DoctorProfile | undefined>;
+  
+  // Scan methods
+  createScan(scan: InsertScan): Promise<Scan>;
+  getScan(id: number): Promise<Scan | undefined>;
+  getPatientScans(patientId: number): Promise<Scan[]>;
+  getPatientScansByStatus(patientId: number, status: ScanStatus | ScanStatus[]): Promise<Scan[]>;
+  getRecentScans(limit: number): Promise<Scan[]>;
+  updateScan(id: number, updates: Partial<Scan>): Promise<Scan | undefined>;
+  updateScanStatus(id: number, status: ScanStatus, message?: string): Promise<Scan | undefined>;
+  retryScan(id: number): Promise<Scan | undefined>;
+  getScansInProcessing(): Promise<Scan[]>;
+  searchScans(query: string, patientId?: number, status?: ScanStatus[]): Promise<Scan[]>;
+  encryptScanData(id: number): Promise<boolean>;
+  decryptScanData(id: number, accessToken: string): Promise<boolean>;
+  
+  // Prescription methods
+  createPrescription(prescription: InsertPrescription): Promise<Prescription>;
+  getPatientPrescriptions(patientId: number): Promise<Prescription[]>;
+  getScanPrescriptions(scanId: number): Promise<Prescription[]>;
+  exportPrescriptionToPDF(id: number): Promise<string>; // Returns the file URL
+  exportPrescriptionToCSV(id: number): Promise<string>; // Returns the file URL
+  exportPatientScansToCSV(patientId: number): Promise<string>; // Returns the file URL
+  
+  // Scan image methods
+  addScanImage(image: InsertScanImage): Promise<ScanImage>;
+  getScanImages(scanId: number): Promise<ScanImage[]>;
+  getScanImagesCount(scanId: number): Promise<number>;
+  
+  // Consultation methods
+  createConsultation(consultation: InsertConsultation): Promise<Consultation>;
+  getConsultation(id: number): Promise<Consultation | undefined>;
+  getDoctorConsultations(doctorId: number): Promise<Consultation[]>;
+  getPatientConsultations(patientId: number): Promise<Consultation[]>;
+  updateConsultation(id: number, updates: Partial<Consultation>): Promise<Consultation | undefined>;
+  getUpcomingConsultations(userId: number, role: UserRole): Promise<Consultation[]>;
+  
+  // Session store
+  sessionStore: any;
+}
+
+export class DatabaseStorage implements IStorage {
+  sessionStore: any;
+  
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true,
+    });
+  }
+  
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+  
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+  
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  async updateUserSession(id: number, token: string, expiry: Date): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        sessionToken: token,
+        sessionExpiry: expiry,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  async clearUserSession(id: number): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        sessionToken: null,
+        sessionExpiry: null,
+      })
+      .where(eq(users.id, id));
+  }
+
+  async validateUserRole(userId: number, role: UserRole): Promise<boolean> {
+    const user = await this.getUser(userId);
+    return user?.role === role;
+  }
+  
+  // Patient profile methods
+  async getPatientProfile(userId: number): Promise<PatientProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(patientProfiles)
+      .where(eq(patientProfiles.userId, userId));
+    return profile;
+  }
+  
+  async createPatientProfile(profile: InsertPatientProfile): Promise<PatientProfile> {
+    const [newProfile] = await db
+      .insert(patientProfiles)
+      .values(profile)
+      .returning();
+    return newProfile;
+  }
+  
+  async updatePatientProfile(
+    userId: number, 
+    profile: Partial<PatientProfile>
+  ): Promise<PatientProfile | undefined> {
+    const [updatedProfile] = await db
+      .update(patientProfiles)
+      .set({
+        ...profile,
+        updatedAt: new Date(),
+      })
+      .where(eq(patientProfiles.userId, userId))
+      .returning();
+    return updatedProfile;
+  }
+  
+  // Doctor profile methods
+  async getDoctorProfile(userId: number): Promise<DoctorProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(doctorProfiles)
+      .where(eq(doctorProfiles.userId, userId));
+    return profile;
+  }
+  
+  async createDoctorProfile(profile: InsertDoctorProfile): Promise<DoctorProfile> {
+    const [newProfile] = await db
+      .insert(doctorProfiles)
+      .values(profile)
+      .returning();
+    return newProfile;
+  }
+  
+  async updateDoctorProfile(
+    userId: number, 
+    profile: Partial<DoctorProfile>
+  ): Promise<DoctorProfile | undefined> {
+    const [updatedProfile] = await db
+      .update(doctorProfiles)
+      .set({
+        ...profile,
+        updatedAt: new Date(),
+      })
+      .where(eq(doctorProfiles.userId, userId))
+      .returning();
+    return updatedProfile;
+  }
+  
+  // Scan methods
+  async createScan(scan: InsertScan): Promise<Scan> {
+    const [newScan] = await db.insert(scans).values(scan).returning();
+    return newScan;
+  }
+  
+  async getScan(id: number): Promise<Scan | undefined> {
+    const [scan] = await db.select().from(scans).where(eq(scans.id, id));
+    return scan;
+  }
+  
+  async getPatientScans(patientId: number): Promise<Scan[]> {
+    return db
+      .select()
+      .from(scans)
+      .where(eq(scans.patientId, patientId))
+      .orderBy(desc(scans.createdAt));
+  }
+  
+  async getRecentScans(limit: number): Promise<Scan[]> {
+    return db
+      .select()
+      .from(scans)
+      .orderBy(desc(scans.createdAt))
+      .limit(limit);
+  }
+  
+  async updateScan(id: number, updates: Partial<Scan>): Promise<Scan | undefined> {
+    const [updatedScan] = await db
+      .update(scans)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(scans.id, id))
+      .returning();
+    return updatedScan;
+  }
+
+  async updateScanStatus(id: number, status: ScanStatus, message?: string): Promise<Scan | undefined> {
+    const [updatedScan] = await db
+      .update(scans)
+      .set({
+        status,
+        statusMessage: message || null,
+        ...(status === ScanStatus.PROCESSING ? { processStartedAt: new Date() } : {}),
+        ...(status === ScanStatus.COMPLETE ? { processCompletedAt: new Date() } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(scans.id, id))
+      .returning();
+    return updatedScan;
+  }
+
+  async retryScan(id: number): Promise<Scan | undefined> {
+    const scan = await this.getScan(id);
+    if (!scan) return undefined;
+
+    const [updatedScan] = await db
+      .update(scans)
+      .set({
+        status: ScanStatus.RETRY,
+        statusMessage: "Retrying scan processing",
+        retryCount: (scan.retryCount || 0) + 1,
+        errorType: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(scans.id, id))
+      .returning();
+    return updatedScan;
+  }
+
+  async getPatientScansByStatus(patientId: number, status: ScanStatus | ScanStatus[]): Promise<Scan[]> {
+    const statusArray = Array.isArray(status) ? status : [status];
+    return db
+      .select()
+      .from(scans)
+      .where(and(
+        eq(scans.patientId, patientId),
+        statusArray.length === 1 
+          ? eq(scans.status, statusArray[0]) 
+          : or(...statusArray.map(s => eq(scans.status, s)))
+      ))
+      .orderBy(desc(scans.createdAt));
+  }
+
+  async getScansInProcessing(): Promise<Scan[]> {
+    return db
+      .select()
+      .from(scans)
+      .where(or(
+        eq(scans.status, ScanStatus.PROCESSING),
+        eq(scans.status, ScanStatus.ANALYZING),
+        eq(scans.status, ScanStatus.GENERATING_MODEL)
+      ))
+      .orderBy(asc(scans.processStartedAt));
+  }
+
+  async searchScans(query: string, patientId?: number, status?: ScanStatus[]): Promise<Scan[]> {
+    let conditions: any[] = [];
+    
+    // Add patientId condition if provided
+    if (patientId !== undefined) {
+      conditions.push(eq(scans.patientId, patientId));
+    }
+    
+    // Add status conditions if provided
+    if (status && status.length > 0) {
+      conditions.push(
+        status.length === 1 
+          ? eq(scans.status, status[0]) 
+          : or(...status.map(s => eq(scans.status, s)))
+      );
+    }
+    
+    // Add search query condition if provided
+    if (query && query.trim() !== '') {
+      conditions.push(
+        or(
+          like(scans.aiDiagnosis, `%${query}%`),
+          like(scans.doctorNotes, `%${query}%`),
+          like(scans.statusMessage, `%${query}%`)
+        )
+      );
+    }
+    
+    // If no conditions, return empty array
+    if (conditions.length === 0) {
+      return [];
+    }
+    
+    return db
+      .select()
+      .from(scans)
+      .where(conditions.length === 1 ? conditions[0] : and(...conditions))
+      .orderBy(desc(scans.createdAt));
+  }
+
+  async getScanImagesCount(scanId: number): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(scanImages)
+      .where(eq(scanImages.scanId, scanId));
+    return result[0]?.count || 0;
+  }
+  
+  // API key methods
+  async validateApiKey(apiKey: string): Promise<boolean> {
+    try {
+      const [key] = await db
+        .select()
+        .from(apiKeys)
+        .where(and(
+          eq(apiKeys.apiKey, apiKey),
+          eq(apiKeys.isActive, true),
+          or(
+            isNull(apiKeys.expiresAt),
+            sql`${apiKeys.expiresAt} > NOW()`
+          )
+        ));
+      
+      if (!key) {
+        return false;
+      }
+      
+      // Update last used timestamp
+      await db
+        .update(apiKeys)
+        .set({
+          lastUsed: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(apiKeys.id, key.id));
+      
+      return true;
+    } catch (error) {
+      console.error('Error validating API key:', error);
+      return false;
+    }
+  }
+  
+  async getApiKeyData(apiKey: string): Promise<{ userId: number, role: UserRole } | undefined> {
+    try {
+      const [key] = await db
+        .select()
+        .from(apiKeys)
+        .where(and(
+          eq(apiKeys.apiKey, apiKey),
+          eq(apiKeys.isActive, true),
+          or(
+            isNull(apiKeys.expiresAt),
+            sql`${apiKeys.expiresAt} > NOW()`
+          )
+        ));
+      
+      if (!key) {
+        return undefined;
+      }
+      
+      // Get user information to include role
+      const user = await this.getUser(key.userId);
+      if (!user) {
+        return undefined;
+      }
+      
+      return {
+        userId: key.userId,
+        role: user.role as UserRole,
+      };
+    } catch (error) {
+      console.error('Error getting API key data:', error);
+      return undefined;
+    }
+  }
+  
+  async generateApiKey(userId: number, description: string): Promise<string> {
+    try {
+      // Generate a secure random API key
+      const apiKeyBytes = crypto.randomBytes(32);
+      const apiKey = apiKeyBytes.toString('hex');
+      
+      // Create a record in the database
+      const [keyRecord] = await db
+        .insert(apiKeys)
+        .values({
+          userId,
+          apiKey,
+          description,
+          isActive: true,
+          // Default permissions and IP restrictions can be set here
+          permissions: JSON.stringify(['read']), // Default to read-only
+          ipRestrictions: JSON.stringify([]), // No IP restrictions by default
+          // Set expiry one year from now by default
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+      
+      return apiKey;
+    } catch (error) {
+      console.error('Error generating API key:', error);
+      throw new Error('Failed to generate API key');
+    }
+  }
+  
+  async revokeApiKey(apiKey: string): Promise<boolean> {
+    try {
+      // Update the API key to be inactive
+      const result = await db
+        .update(apiKeys)
+        .set({
+          isActive: false,
+          updatedAt: new Date(),
+        })
+        .where(eq(apiKeys.apiKey, apiKey))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error revoking API key:', error);
+      return false;
+    }
+  }
+
+  async encryptScanData(id: number): Promise<boolean> {
+    const scan = await this.getScan(id);
+    if (!scan) return false;
+    
+    try {
+      // Generate a secure encryption key
+      const encryptionKey = crypto.randomBytes(32);
+      const iv = crypto.randomBytes(16);
+      
+      // Encrypt sensitive data
+      const cipher = crypto.createCipheriv('aes-256-gcm', encryptionKey, iv);
+      let encryptedDiagnosis = '';
+      let encryptedDetails = '';
+      
+      // Encrypt diagnosis data if it exists
+      if (scan.aiDiagnosis) {
+        encryptedDiagnosis = cipher.update(scan.aiDiagnosis, 'utf8', 'hex');
+        encryptedDiagnosis += cipher.final('hex');
+      }
+      
+      // Encrypt diagnosis details if they exist
+      if (scan.aiDiagnosisDetails) {
+        const diagnosisDetailsStr = JSON.stringify(scan.aiDiagnosisDetails);
+        cipher.update(diagnosisDetailsStr, 'utf8', 'hex');
+        encryptedDetails = cipher.final('hex');
+      }
+      
+      // Get authentication tag
+      const authTag = cipher.getAuthTag().toString('hex');
+      
+      // Store encryption metadata
+      const encryptionDetails = {
+        algorithm: 'aes-256-gcm',
+        keyId: crypto.randomUUID(),
+        iv: iv.toString('hex'),
+        authTag,
+        createdAt: new Date().toISOString(),
+        // Store encrypted key in a secure way (in a real implementation, this would use a KMS)
+        encryptedKey: encryptionKey.toString('hex')
+      };
+      
+      // Update the database with encrypted data
+      await db
+        .update(scans)
+        .set({
+          isEncrypted: true,
+          aiDiagnosis: encryptedDiagnosis || scan.aiDiagnosis,
+          aiDiagnosisDetails: encryptedDetails ? JSON.parse(encryptedDetails) : scan.aiDiagnosisDetails,
+          encryptionDetails,
+          updatedAt: new Date(),
+        })
+        .where(eq(scans.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error('Error encrypting scan data:', error);
+      return false;
+    }
+  }
+
+  async decryptScanData(id: number, accessToken: string): Promise<boolean> {
+    try {
+      const scan = await this.getScan(id);
+      if (!scan || !scan.isEncrypted || !scan.encryptionDetails) return false;
+      
+      // Verify access token here (implement proper auth check)
+      // This is a simplified version for demonstration
+      if (!accessToken) return false;
+      
+      // Get encryption details
+      const details = scan.encryptionDetails as any;
+      if (!details.iv || !details.authTag || !details.encryptedKey) {
+        throw new Error('Invalid encryption details');
+      }
+      
+      // Get decryption key (in a real system, this would use a secure KMS)
+      const key = Buffer.from(details.encryptedKey, 'hex');
+      const iv = Buffer.from(details.iv, 'hex');
+      const authTag = Buffer.from(details.authTag, 'hex');
+      
+      // Create decipher
+      const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+      decipher.setAuthTag(authTag);
+      
+      // Decrypt the diagnosis
+      let decryptedDiagnosis = '';
+      if (scan.aiDiagnosis) {
+        decryptedDiagnosis = decipher.update(scan.aiDiagnosis, 'hex', 'utf8');
+        decryptedDiagnosis += decipher.final('utf8');
+      }
+      
+      // For diagnosis details, we would do similar decryption
+      
+      // Update the database with decrypted data temporarily
+      // In a real system, we would not store the decrypted data back in the database
+      // but rather return it for the current session only
+      await db
+        .update(scans)
+        .set({
+          aiDiagnosis: decryptedDiagnosis || scan.aiDiagnosis,
+          // We'd also update aiDiagnosisDetails similarly
+          updatedAt: new Date(),
+        })
+        .where(eq(scans.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error('Error decrypting scan data:', error);
+      return false;
+    }
+  }
+
+  async exportPrescriptionToPDF(id: number): Promise<string> {
+    try {
+      // Fetch the prescription data with related data
+      const prescription = await db
+        .select()
+        .from(prescriptions)
+        .where(eq(prescriptions.id, id))
+        .limit(1);
+      
+      if (!prescription || prescription.length === 0) {
+        throw new Error('Prescription not found');
+      }
+      
+      // Get patient info
+      const patient = await this.getUser(prescription[0].patientId);
+      if (!patient) {
+        throw new Error('Patient not found');
+      }
+      
+      // Get doctor info
+      const doctor = await this.getUser(prescription[0].doctorId);
+      if (!doctor) {
+        throw new Error('Doctor not found');
+      }
+      
+      // Get scan info
+      const scan = await this.getScan(prescription[0].scanId);
+      if (!scan) {
+        throw new Error('Scan not found');
+      }
+      
+      // Generate a structured data object for the PDF
+      const pdfData = {
+        prescription: prescription[0],
+        patient: {
+          name: patient.fullName,
+          email: patient.email,
+        },
+        doctor: {
+          name: doctor.fullName,
+          email: doctor.email,
+        },
+        scan: {
+          id: scan.id,
+          date: scan.createdAt,
+          diagnosis: scan.aiDiagnosis,
+        },
+        generatedAt: new Date().toISOString(),
+        barogripLogo: '/assets/barogrip-logo.png',
+      };
+      
+      // In a real implementation, this would use a PDF generation library
+      // such as PDFKit or html-pdf to generate a PDF file
+      
+      // For this demonstration, we'll simply return a URL that would serve the PDF
+      const filename = `prescription_${id}_${Date.now()}.pdf`;
+      const fileUrl = `/api/prescriptions/${id}/download?format=pdf&filename=${filename}&t=${Date.now()}`;
+      
+      // In a real implementation, the PDF data would be saved to a file or cloud storage
+      
+      return fileUrl;
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      throw error;
+    }
+  }
+  
+  async exportPrescriptionToCSV(id: number): Promise<string> {
+    try {
+      // Fetch prescription data
+      const prescription = await db
+        .select()
+        .from(prescriptions)
+        .where(eq(prescriptions.id, id))
+        .limit(1);
+      
+      if (!prescription || prescription.length === 0) {
+        throw new Error('Prescription not found');
+      }
+      
+      // Format data for CSV
+      const csvData = [
+        ['Prescription ID', 'Patient ID', 'Doctor ID', 'Title', 'Description', 'Created At'],
+        [
+          prescription[0].id.toString(),
+          prescription[0].patientId.toString(),
+          prescription[0].doctorId.toString(),
+          prescription[0].title,
+          prescription[0].description,
+          prescription[0].createdAt.toISOString(),
+        ]
+      ];
+      
+      // In a real implementation, this would generate a CSV file
+      // For this demo, return a URL that would serve the CSV
+      const filename = `prescription_${id}_${Date.now()}.csv`;
+      const fileUrl = `/api/prescriptions/${id}/download?format=csv&filename=${filename}&t=${Date.now()}`;
+      
+      return fileUrl;
+    } catch (error) {
+      console.error('Error generating CSV:', error);
+      throw error;
+    }
+  }
+  
+  async exportPatientScansToCSV(patientId: number): Promise<string> {
+    try {
+      // Fetch all patient scans
+      const patientScans = await this.getPatientScans(patientId);
+      
+      if (patientScans.length === 0) {
+        throw new Error('No scans found for this patient');
+      }
+      
+      // Format data for CSV
+      const csvData = [
+        ['Scan ID', 'Status', 'Created At', 'Completed At', 'Diagnosis', 'Confidence'],
+      ];
+      
+      patientScans.forEach(scan => {
+        csvData.push([
+          scan.id.toString(),
+          scan.status,
+          scan.createdAt.toISOString(),
+          scan.processCompletedAt ? scan.processCompletedAt.toISOString() : '',
+          scan.aiDiagnosis || '',
+          scan.aiConfidence ? scan.aiConfidence.toString() : '',
+        ]);
+      });
+      
+      // In a real implementation, this would generate a CSV file
+      // For this demo, return a URL that would serve the CSV
+      const filename = `patient_${patientId}_scans_${Date.now()}.csv`;
+      const fileUrl = `/api/patients/${patientId}/scans/download?format=csv&filename=${filename}&t=${Date.now()}`;
+      
+      return fileUrl;
+    } catch (error) {
+      console.error('Error generating patient scans CSV:', error);
+      throw error;
+    }
+  }
+  
+  // Prescription methods
+  async createPrescription(prescription: InsertPrescription): Promise<Prescription> {
+    const [newPrescription] = await db
+      .insert(prescriptions)
+      .values(prescription)
+      .returning();
+    return newPrescription;
+  }
+  
+  async getPatientPrescriptions(patientId: number): Promise<Prescription[]> {
+    return db
+      .select()
+      .from(prescriptions)
+      .where(eq(prescriptions.patientId, patientId))
+      .orderBy(desc(prescriptions.createdAt));
+  }
+  
+  async getScanPrescriptions(scanId: number): Promise<Prescription[]> {
+    return db
+      .select()
+      .from(prescriptions)
+      .where(eq(prescriptions.scanId, scanId))
+      .orderBy(desc(prescriptions.createdAt));
+  }
+  
+  // Scan image methods
+  async addScanImage(image: InsertScanImage): Promise<ScanImage> {
+    const [newImage] = await db.insert(scanImages).values(image).returning();
+    return newImage;
+  }
+  
+  async getScanImages(scanId: number): Promise<ScanImage[]> {
+    return db
+      .select()
+      .from(scanImages)
+      .where(eq(scanImages.scanId, scanId));
+  }
+
+  // Consultation methods
+  async createConsultation(consultation: InsertConsultation): Promise<Consultation> {
+    const [newConsultation] = await db
+      .insert(consultations)
+      .values(consultation)
+      .returning();
+    return newConsultation;
+  }
+
+  async getConsultation(id: number): Promise<Consultation | undefined> {
+    const [consultation] = await db
+      .select()
+      .from(consultations)
+      .where(eq(consultations.id, id));
+    return consultation;
+  }
+
+  async getDoctorConsultations(doctorId: number): Promise<Consultation[]> {
+    return db
+      .select()
+      .from(consultations)
+      .where(eq(consultations.doctorId, doctorId))
+      .orderBy(asc(consultations.scheduledTime));
+  }
+
+  async getPatientConsultations(patientId: number): Promise<Consultation[]> {
+    return db
+      .select()
+      .from(consultations)
+      .where(eq(consultations.patientId, patientId))
+      .orderBy(asc(consultations.scheduledTime));
+  }
+
+  async updateConsultation(id: number, updates: Partial<Consultation>): Promise<Consultation | undefined> {
+    const [updatedConsultation] = await db
+      .update(consultations)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(consultations.id, id))
+      .returning();
+    return updatedConsultation;
+  }
+
+  async getUpcomingConsultations(userId: number, role: UserRole): Promise<Consultation[]> {
+    const now = new Date();
+    
+    // Query logic varies based on role
+    const query = role === UserRole.DOCTOR ?
+      and(
+        eq(consultations.doctorId, userId),
+        sql`${consultations.scheduledTime} > ${now}`
+      ) :
+      and(
+        eq(consultations.patientId, userId),
+        sql`${consultations.scheduledTime} > ${now}`
+      );
+    
+    return db
+      .select()
+      .from(consultations)
+      .where(query)
+      .orderBy(asc(consultations.scheduledTime))
+      .limit(10);
+  }
+
+  // API key methods
+  async validateApiKey(apiKey: string): Promise<boolean> {
+    try {
+      const [key] = await db
+        .select()
+        .from(apiKeys)
+        .where(and(
+          eq(apiKeys.apiKey, apiKey),
+          eq(apiKeys.isActive, true),
+          or(
+            isNull(apiKeys.expiresAt),
+            sql`${apiKeys.expiresAt} > NOW()`
+          )
+        ));
+      
+      if (!key) {
+        return false;
+      }
+      
+      // Update last used timestamp
+      await db
+        .update(apiKeys)
+        .set({
+          lastUsed: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(apiKeys.id, key.id));
+      
+      return true;
+    } catch (error) {
+      console.error('Error validating API key:', error);
+      return false;
+    }
+  }
+  
+  async getApiKeyData(apiKey: string): Promise<{ userId: number, role: UserRole } | undefined> {
+    try {
+      const [key] = await db
+        .select()
+        .from(apiKeys)
+        .where(and(
+          eq(apiKeys.apiKey, apiKey),
+          eq(apiKeys.isActive, true),
+          or(
+            isNull(apiKeys.expiresAt),
+            sql`${apiKeys.expiresAt} > NOW()`
+          )
+        ));
+      
+      if (!key) {
+        return undefined;
+      }
+      
+      // Get user information to include role
+      const user = await this.getUser(key.userId);
+      if (!user) {
+        return undefined;
+      }
+      
+      return {
+        userId: key.userId,
+        role: user.role as UserRole,
+      };
+    } catch (error) {
+      console.error('Error getting API key data:', error);
+      return undefined;
+    }
+  }
+  
+  async generateApiKey(userId: number, description: string): Promise<string> {
+    try {
+      // Generate a secure random API key
+      const apiKeyBytes = crypto.randomBytes(32);
+      const apiKey = apiKeyBytes.toString('hex');
+      
+      // Create a record in the database
+      const [keyRecord] = await db
+        .insert(apiKeys)
+        .values({
+          userId,
+          apiKey,
+          description,
+          isActive: true,
+          // Default permissions and IP restrictions can be set here
+          permissions: JSON.stringify(['read']), // Default to read-only
+          ipRestrictions: JSON.stringify([]), // No IP restrictions by default
+          // Set expiry one year from now by default
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+      
+      return apiKey;
+    } catch (error) {
+      console.error('Error generating API key:', error);
+      throw new Error('Failed to generate API key');
+    }
+  }
+  
+  async revokeApiKey(apiKey: string): Promise<boolean> {
+    try {
+      // Update the API key to be inactive
+      const result = await db
+        .update(apiKeys)
+        .set({
+          isActive: false,
+          updatedAt: new Date(),
+        })
+        .where(eq(apiKeys.apiKey, apiKey))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error revoking API key:', error);
+      return false;
+    }
+  }
+}
+
+export const storage = new DatabaseStorage();

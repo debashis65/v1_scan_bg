@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #4F46E5;
+  --primary-dark: #4338CA;
+  --secondary: #10B981;
+  --secondary-dark: #059669;
+  --background: #F9FAFB;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background);
+  color: var(--text-primary);
+}
+
+/* Custom utility classes */
+.bg-primary {
+  background-color: var(--primary);
+}
+.bg-primary-dark {
+  background-color: var(--primary-dark);
+}
+.bg-secondary {
+  background-color: var(--secondary);
+}
+.bg-secondary-dark {
+  background-color: var(--secondary-dark);
+}
+.bg-background {
+  background-color: var(--background);
+}
+.text-primary {
+  color: var(--primary);
+}
+.text-primary-dark {
+  color: var(--primary-dark);
+}
+.text-secondary {
+  color: var(--secondary);
+}
+.hover\:bg-primary-dark:hover {
+  background-color: var(--primary-dark);
+}
+.hover\:bg-secondary-dark:hover {
+  background-color: var(--secondary-dark);
+}
+.hover\:text-primary-dark:hover {
+  color: var(--primary-dark);
+}
+.focus\:ring-primary:focus {
+  --tw-ring-color: var(--primary);
+}
+.focus\:border-primary:focus {
+  border-color: var(--primary);
+}

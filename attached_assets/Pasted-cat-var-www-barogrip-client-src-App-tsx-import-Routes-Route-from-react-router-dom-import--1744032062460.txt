@@ -1,0 +1,79 @@
+cat /var/www/barogrip/client/src/App.tsx
+import { Routes, Route } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/query-client';
+import { ToastProvider } from './providers/toast-provider';
+import { AuthProvider } from './hooks/use-auth';
+import { ProtectedRoute } from './lib/protected-route';
+import ErrorBoundary from './components/ErrorBoundary';
+
+// Pages will be imported here
+import HomePage from './pages/home';
+import AuthPage from './pages/auth';
+import NotFoundPage from './pages/not-found';
+import TestViewerPage from './pages/test-viewer';
+import ScanHistoryPage from './pages/scan-history';
+import ScanDetails from './pages/scan-details';
+import DoctorDashboard from './pages/doctor-dashboard';
+
+// Error logging service setup
+const logError = (error: Error, errorInfo: React.ErrorInfo) => {
+  // In a production environment, this would send to an error tracking service like Sentry
+  console.error('Application error:', error);
+  console.error('Component stack:', errorInfo.componentStack);
+};
+
+function App() {
+  return (
+    <ErrorBoundary onError={logError}>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <AuthProvider>
+            <Routes>
+              <Route element={<ProtectedRoute />}>
+                <Route path="/" element={
+                  <ErrorBoundary>
+                    <HomePage />
+                  </ErrorBoundary>
+                } />
+                <Route path="/scans" element={
+                  <ErrorBoundary>
+                    <ScanHistoryPage />
+                  </ErrorBoundary>
+                } />
+                <Route path="/scans/:id" element={
+                  <ErrorBoundary>
+                    <ScanDetails />
+                  </ErrorBoundary>
+                } />
+                <Route path="/doctor-dashboard" element={
+                  <ErrorBoundary>
+                    <DoctorDashboard />
+                  </ErrorBoundary>
+                } />
+                {/* Other protected routes */}
+              </Route>
+              <Route path="/auth" element={
+                <ErrorBoundary>
+                  <AuthPage />
+                </ErrorBoundary>
+              } />
+              <Route path="/test-viewer" element={
+                <ErrorBoundary>
+                  <TestViewerPage />
+                </ErrorBoundary>
+              } />
+              <Route path="*" element={
+                <ErrorBoundary>
+                  <NotFoundPage />
+                </ErrorBoundary>
+              } />
+            </Routes>
+          </AuthProvider>
+        </ToastProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+}
+
+export default App;

@@ -1,0 +1,445 @@
+#!/bin/bash
+
+echo "🚀 Starting Barogrip Setup on Ubuntu 24.04 with OpenLiteSpeed"
+echo "This script assumes OpenLiteSpeed and Node.js are already installed."
+
+# === 1. Set up Variables ===
+read -p "Enter your GitHub username: " GITHUB_USERNAME
+read -s -p "Enter your GitHub token: " GITHUB_TOKEN
+echo ""
+REPO_URL="https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/debashis65/barogrip.git"
+
+# Create a secure password for the database user - alphanumeric only to avoid escaping issues
+DB_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9')
+DB_USER="barogrip"
+DB_NAME="barogrip_db"
+APP_DIR="/var/www/barogrip"
+INPUT_DIR="${APP_DIR}/input"
+OUTPUT_DIR="${APP_DIR}/output"
+echo "Generated secure database password: ${DB_PASSWORD}"
+echo "Please save this password for future reference."
+
+# === 2. Completely clean the application directory ===
+echo "🧹 Cleaning previous installation..."
+sudo rm -rf ${APP_DIR}
+sudo mkdir -p ${APP_DIR}
+sudo chown -R $USER:$USER ${APP_DIR}
+echo "Cleanup successful!"
+
+# === 3. Install Additional Prerequisites ===
+echo "📦 Installing additional prerequisites..."
+sudo apt update
+sudo apt install -y git unzip zip build-essential \
+    python3 python3-venv python3-dev python3-pip libopencv-dev python3-opencv \
+    libssl-dev libffi-dev libpq-dev postgresql postgresql-contrib
+
+# === 4. Clone Repository ===
+echo "📥 Cloning Barogrip repository..."
+cd ${APP_DIR}
+git clone ${REPO_URL} .
+
+# Check if clone was successful
+if [ ! -f "${APP_DIR}/package.json" ]; then
+    echo "❌ Failed to clone repository. Check your GitHub credentials and try again."
+    echo "Directory contents:"
+    ls -la ${APP_DIR}
+    exit 1
+else
+    echo "✅ Repository cloned successfully!"
+    echo "Directory contents:"
+    ls -la ${APP_DIR}
+fi
+
+# === 5. Set up Application Directory ===
+echo "📂 Creating additional directories..."
+sudo mkdir -p ${INPUT_DIR}/sample ${OUTPUT_DIR}
+sudo chown -R $USER:$USER ${APP_DIR}
+
+# === 6. PostgreSQL Setup ===
+echo "🔐 Setting up PostgreSQL database..."
+if sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw ${DB_NAME}; then
+    echo "Database ${DB_NAME} already exists, dropping and recreating"
+    sudo -u postgres psql -c "DROP DATABASE IF EXISTS ${DB_NAME};"
+    sudo -u postgres psql -c "DROP USER IF EXISTS ${DB_USER};"
+fi
+
+sudo -u postgres psql <<EOF
+CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';
+CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};
+GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};
+EOF
+echo "Database ${DB_NAME} created successfully"
+
+# === 7. Create Environment File ===
+echo "⚙️ Creating environment file..."
+# URL encode the = character in the password for the DATABASE_URL
+ENCODED_PASSWORD=$(echo ${DB_PASSWORD} | sed 's/=/%3D/g')
+cat > ${APP_DIR}/.env <<EOF
+# Database configuration
+DATABASE_URL=postgresql://${DB_USER}:${ENCODED_PASSWORD}@localhost:5432/${DB_NAME}
+PGUSER=${DB_USER}
+PGPASSWORD=${DB_PASSWORD}
+PGHOST=localhost
+PGPORT=5432
+PGDATABASE=${DB_NAME}
+
+# Server configuration
+NODE_ENV=production
+PORT=3000
+SESSION_SECRET=$(openssl rand -hex 24)
+
+# 2FA and security configuration
+TWO_FACTOR_SECRET=$(openssl rand -hex 16)
+
+# PDF Report configuration
+DEFAULT_REPORT_LANGUAGE=en
+ENABLE_ICD10_CODES=true
+
+# Domain configuration
+API_URL=https://api.barogrip.com
+CLIENT_APP_URL=https://app.barogrip.com
+
+# Email configuration
+SMTP_HOST=your_smtp_host
+SMTP_PORT=587
+SMTP_USER=your_smtp_user
+SMTP_PASS=your_smtp_password
+EMAIL_FROM=insoles@barogrip.com
+
+# Resource control
+MAX_DB_CONNECTIONS=10
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+EOF
+
+# === 8. Apply Database Connection Pool Optimization ===
+echo "🔄 Optimizing database connection pool..."
+if [ -f "${APP_DIR}/server/db.ts" ]; then
+    # Check if the file already has pool configuration
+    if grep -q "max:" "${APP_DIR}/server/db.ts"; then
+        echo "Database connection pool already configured"
+    else
+        # Insert connection pool configuration
+        sed -i 's/export const pool = new Pool({/export const pool = new Pool({\n  max: 10, \/\/ Maximum number of clients\n  idleTimeoutMillis: 30000,/g' "${APP_DIR}/server/db.ts"
+        echo "Database connection pool optimized"
+    fi
+fi
+
+# === 9. Add Rate Limiting to Server ===
+echo "🔒 Adding rate limiting to API..."
+# Install rate limiting package
+cd ${APP_DIR}
+npm install express-rate-limit
+
+# Check if rate limiting is already configured
+if [ -f "${APP_DIR}/server/routes.ts" ]; then
+    if grep -q "rateLimit" "${APP_DIR}/server/routes.ts"; then
+        echo "Rate limiting already configured"
+    else
+        # Insert rate limiting code at the top of the file
+        TMP_FILE=$(mktemp)
+        cat > ${TMP_FILE} <<EOF
+import rateLimit from 'express-rate-limit';
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+EOF
+        cat "${APP_DIR}/server/routes.ts" >> ${TMP_FILE}
+        
+        # Now let's find the express app setup and add the rate limiter
+        if grep -q "app.use(\"/api/" ${TMP_FILE}; then
+            sed -i '/app.use("\/api\//i app.use("/api/", apiLimiter);' ${TMP_FILE}
+        fi
+        
+        mv ${TMP_FILE} "${APP_DIR}/server/routes.ts"
+        echo "Rate limiting added to API routes"
+    fi
+fi
+
+# === 10. Server (Main Backend) Setup ===
+echo "🔧 Setting up server backend..."
+# Install dependencies at the root level (which contains server code)
+cd ${APP_DIR}
+cp ${APP_DIR}/.env .
+npm install
+npm run build || echo "Build script may not exist in root, continuing..."
+
+# === 11. Client Setup ===
+echo "👤 Setting up client..."
+cd ${APP_DIR}/client
+if [ -f "package.json" ]; then
+    npm install
+    npm run build || echo "Build script may not exist in client, continuing..."
+else
+    echo "Warning: No package.json found in client directory"
+fi
+
+# === 12. Python Processor Setup ===
+echo "🧠 Setting up Python processor..."
+cd ${APP_DIR}/processor
+if [ -f "processor.py" ]; then
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install tensorflow-cpu
+    pip install matplotlib scikit-learn opencv-python requests watchdog flask-login flask-wtf
+    pip install Pillow scipy psycopg2-binary tqdm pandas jinja2 otplib qrcode fpdf
+    pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+    # Add CPU throttling to processor.py
+    if [ -f "processor.py" ] && ! grep -q "CPU throttling" "processor.py"; then
+        echo "Adding CPU throttling to processor.py..."
+        TMP_FILE=$(mktemp)
+        cat > ${TMP_FILE} <<EOF
+import time
+import os
+import sys
+from pathlib import Path
+
+# CPU throttling section
+class CPUThrottler:
+    def __init__(self, target_usage=0.3):
+        self.target_usage = target_usage
+        self.last_throttle_time = time.time()
+    
+    def throttle(self):
+        """Throttle CPU usage by adding small sleep intervals"""
+        current_time = time.time()
+        elapsed = current_time - self.last_throttle_time
+        if elapsed < 0.1:  # If processing is happening too quickly
+            sleep_time = 0.05  # Add a small delay
+            time.sleep(sleep_time)
+        self.last_throttle_time = time.time()
+
+# Create global throttler instance
+cpu_throttler = CPUThrottler(target_usage=0.3)
+
+EOF
+        cat "processor.py" >> ${TMP_FILE}
+        # Add throttling calls after major processing functions
+        sed -i 's/def process_scan/def process_scan_original/g' ${TMP_FILE}
+        cat >> ${TMP_FILE} <<EOF
+
+def process_scan(*args, **kwargs):
+    """Wrapper around the original process_scan with CPU throttling"""
+    result = process_scan_original(*args, **kwargs)
+    cpu_throttler.throttle()  # Throttle CPU after processing
+    return result
+EOF
+        mv ${TMP_FILE} "processor.py"
+        echo "CPU throttling added to processor.py"
+    fi
+    
+    deactivate
+else
+    echo "Warning: processor.py not found"
+fi
+
+# === 13. Set up CPU Resource Control with cgroups ===
+echo "📊 Setting up CPU resource control..."
+# Create CPU control group
+sudo cgcreate -g cpu:/barogrip_limit || echo "Could not create cgroup, may already exist"
+sudo cgset -r cpu.shares=512 barogrip_limit || echo "Could not set CPU shares, continuing..."
+
+# === 14. Set up Monit for Resource Monitoring ===
+echo "📈 Setting up Monit for resource monitoring..."
+# Create Monit configuration
+sudo bash -c "cat > /etc/monit/conf.d/barogrip" <<EOF
+check process barogrip-processor matching "processor.py"
+  if cpu > 40% for 2 cycles then restart
+  if memory > 300 MB for 2 cycles then restart
+
+check process barogrip-server matching "server/index.ts"
+  if cpu > 40% for 2 cycles then restart
+  if memory > 350 MB for 2 cycles then restart
+EOF
+
+# Restart Monit to apply configuration
+sudo systemctl restart monit
+
+# === 15. Set up PM2 Services ===
+echo "🔄 Setting up PM2 services..."
+sudo npm install -g pm2 typescript ts-node drizzle-kit
+
+# Stop ALL existing PM2 processes first
+echo "Stopping all existing PM2 processes..."
+pm2 stop all 2>/dev/null || true
+pm2 delete all 2>/dev/null || true
+
+# Start server backend service with resource limits
+cd ${APP_DIR}
+echo "Starting server with resource limits..."
+
+# Check for different possible server entry points
+if [ -f "${APP_DIR}/server/index.ts" ]; then
+    echo "Found TypeScript server entry point"
+    pm2 start --interpreter ./node_modules/.bin/ts-node -f server/index.ts --name barogrip-server --max-memory-restart 300M --node-args="--max-old-space-size=300"
+elif [ -f "${APP_DIR}/server/index.js" ]; then
+    echo "Found JavaScript server entry point"
+    pm2 start -f server/index.js --name barogrip-server --max-memory-restart 300M --node-args="--max-old-space-size=300"
+elif [ -f "${APP_DIR}/server/app.js" ]; then
+    echo "Found app.js server entry point"
+    pm2 start -f server/app.js --name barogrip-server --max-memory-restart 300M --node-args="--max-old-space-size=300"
+elif [ -f "${APP_DIR}/dist/server/index.js" ]; then
+    pm2 start -f dist/server/index.js --name barogrip-server --max-memory-restart 300M --node-args="--max-old-space-size=300"
+elif [ -f "${APP_DIR}/dist/index.js" ]; then
+    pm2 start -f dist/index.js --name barogrip-server --max-memory-restart 300M --node-args="--max-old-space-size=300"
+else
+    echo "Available server files:"
+    find ${APP_DIR}/server -type f -name "*.js" -o -name "*.ts" | sort
+    
+    echo "Warning: Could not find a suitable entry point for the server"
+    read -p "Please specify the server entry point (relative to ${APP_DIR}): " SERVER_ENTRY
+    
+    if [ -f "${APP_DIR}/${SERVER_ENTRY}" ]; then
+        if [[ "${SERVER_ENTRY}" == *.ts ]]; then
+            pm2 start --interpreter ./node_modules/.bin/ts-node -f "${SERVER_ENTRY}" --name barogrip-server --max-memory-restart 300M --node-args="--max-old-space-size=300"
+        else
+            pm2 start -f "${SERVER_ENTRY}" --name barogrip-server --max-memory-restart 300M --node-args="--max-old-space-size=300"
+        fi
+    else
+        echo "⚠️ Warning: Server entry point file not found. Server will not be started."
+    fi
+fi
+
+# Start processor service with cgroups and resource limits
+cd ${APP_DIR}/processor
+if [ -f "processor.py" ]; then
+    echo "Starting processor service with CPU limiting..."
+    sudo cgexec -g cpu:barogrip_limit pm2 start -f processor.py --name barogrip-processor --interpreter ${APP_DIR}/processor/venv/bin/python -- --input-dir ${INPUT_DIR} --output-dir ${OUTPUT_DIR}
+else
+    echo "Warning: processor.py not found, processor service will not be started"
+fi
+
+# Start client service if necessary
+cd ${APP_DIR}
+if [ -f "serve-client.js" ]; then
+    echo "Starting client service..."
+    pm2 start -f serve-client.js --name barogrip-client --max-memory-restart 200M --node-args="--max-old-space-size=200"
+else
+    echo "Warning: serve-client.js not found, client service will not be started"
+fi
+
+# Save PM2 configuration
+pm2 save
+pm2 startup
+
+# === 16. Database Schema Push ===
+echo "🗄️ Setting up database schema..."
+cd ${APP_DIR}
+if [ -f "scripts/db-push.js" ]; then
+    node scripts/db-push.js
+else
+    echo "Warning: scripts/db-push.js not found, skipping database schema push"
+fi
+
+# === 17. OpenLiteSpeed Virtual Host Configuration ===
+echo "🌐 Creating OpenLiteSpeed configuration templates..."
+
+# Create directory for virtual host configurations
+sudo mkdir -p /tmp/barogrip_vhost_configs
+
+# Create API virtual host configuration
+cat > /tmp/barogrip_vhost_configs/api.barogrip.com.conf <<EOF
+docRoot \$VH_ROOT
+vhDomain api.barogrip.com
+vhAliases www.api.barogrip.com
+adminEmails admin@barogrip.com
+enableGzip 1
+enableIpGeo 1
+
+context / {
+  type proxy
+  handler localhost:3000
+  addDefaultCharset off
+}
+
+rewrite {
+  enable 1
+  logLevel 0
+  rules {
+    RewriteRule ^/.well-known/(.*)$ /.well-known/\$1 [L]
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}\$1 [R=301,L]
+  }
+}
+EOF
+
+# Create patient app virtual host configuration
+CLIENT_DIST_DIR="${APP_DIR}/client/dist"
+if [ ! -d "${CLIENT_DIST_DIR}" ]; then
+    CLIENT_DIST_DIR="${APP_DIR}/client/build"
+    if [ ! -d "${CLIENT_DIST_DIR}" ]; then
+        CLIENT_DIST_DIR="${APP_DIR}/client"
+    fi
+fi
+
+cat > /tmp/barogrip_vhost_configs/app.barogrip.com.conf <<EOF
+docRoot ${CLIENT_DIST_DIR}
+vhDomain app.barogrip.com
+vhAliases www.app.barogrip.com
+adminEmails admin@barogrip.com
+enableGzip 1
+enableIpGeo 1
+
+context / {
+  type proxy
+  handler localhost:5000
+  addDefaultCharset off
+}
+
+# Redirect API requests to api.barogrip.com
+context /api/ {
+  type proxy
+  handler api.barogrip.com
+  addDefaultCharset off
+}
+
+rewrite {
+  enable 1
+  logLevel 0
+  rules {
+    RewriteRule ^/.well-known/(.*)$ /.well-known/\$1 [L]
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}\$1 [R=301,L]
+  }
+}
+EOF
+
+echo "⚠️ Virtual host configuration templates have been created in /tmp/barogrip_vhost_configs/"
+echo "⚠️ Please manually copy these to your OpenLiteSpeed configuration or use the WebAdmin interface to create the virtual hosts."
+
+# === 18. Set Permissions ===
+sudo chown -R $USER:$USER ${APP_DIR}
+chmod -R 755 ${APP_DIR}
+
+echo "✅ Barogrip Setup Complete!"
+echo "🌟 Next steps:"
+echo "  1. Update the .env file with your actual SMTP and other credentials"
+echo "  2. Configure OpenLiteSpeed virtual hosts using the templates in /tmp/barogrip_vhost_configs/"
+echo "  3. Ensure DNS records are set for app.barogrip.com, and api.barogrip.com"
+echo "  4. Set up SSL certificates for your domains if not already configured"
+echo ""
+echo "🔍 Check server status with: pm2 status"
+echo "📋 View logs with: pm2 logs"
+echo ""
+echo "🎉 Thank you for installing Barogrip!"
+
+# === 19. Post-Deployment API & Frontend Health Check ===
+echo ""
+echo "🧪 Running post-deployment verification tests..."
+
+# Test 1: API Health Check
+echo "🔍 Testing API Endpoint (https://api.barogrip.com/api/health)..."
+curl -s -o /dev/null -w "%{http_code} - %{url_effective}\n" https://api.barogrip.com/api/health
+
+# Test 2: Frontend Load Check
+echo "🔍 Testing Frontend Load (https://app.barogrip.com)..."
+curl -s -o /dev/null -w "%{http_code} - %{url_effective}\n" https://app.barogrip.com
+
+echo ""
+echo "✅ If both responses return 200, Barogrip is live and accessible."
+

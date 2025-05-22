@@ -1,0 +1,291 @@
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { apiRequest } from "../lib/query-client";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
+
+interface Patient {
+  id: number;
+  username: string;
+  email: string;
+  patientProfiles: Array<{
+    age?: number;
+    gender?: string;
+    height?: number;
+    weight?: number;
+    shoeSize?: number;
+    shoeSizeUnit?: string;
+    footPain?: string;
+    usedOrthopedicInsoles: boolean;
+    hasDiabetes: boolean;
+    hasArthritis: boolean;
+    hasHeelSpur: boolean;
+  }>;
+}
+
+interface Scan {
+  id: number;
+  patientId: number;
+  status: string;
+  aiDiagnosis?: string;
+  aiConfidence?: number;
+  doctorNotes?: string;
+  createdAt: string;
+  objUrl?: string;
+  thumbnailUrl?: string;
+}
+
+const DoctorDashboard: React.FC = () => {
+  const { user, logoutMutation } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Check if user is a doctor
+  if (user?.role !== "doctor") {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8 text-center">
+        <p className="text-red-500">You don't have permission to view this page.</p>
+      </div>
+    );
+  }
+  
+  // Fetch patients
+  const {
+    data: patients,
+    isLoading: patientsLoading,
+    error: patientsError,
+  } = useQuery({
+    queryKey: ["/api/patients"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/patients");
+      return res.json();
+    },
+  });
+  
+  // Fetch recent scans
+  const {
+    data: recentScans,
+    isLoading: scansLoading,
+    error: scansError,
+  } = useQuery({
+    queryKey: ["/api/doctor/recent-scans"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/doctor/recent-scans");
+      return res.json();
+    },
+  });
+  
+  // Filter patients by search term
+  const filteredPatients = patients
+    ? patients.filter((patient: Patient) =>
+        patient.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.email.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
+  
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold text-gray-900">BAROGRIP</h1>
+          <div className="flex items-center">
+            <span className="mr-4 text-gray-700">Dr. {user.username}</span>
+            <button
+              onClick={() => logoutMutation.mutate()}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-8">Doctor Dashboard</h2>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Recent Scans */}
+          <div className="lg:col-span-2">
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Recent Scans to Review
+              </h3>
+              
+              {scansLoading ? (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-500" />
+                  <p className="text-gray-600">Loading recent scans...</p>
+                </div>
+              ) : scansError ? (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative text-center">
+                  <p>Failed to load recent scans. Please try again later.</p>
+                </div>
+              ) : recentScans && recentScans.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Patient
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Scan Date
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          AI Diagnosis
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {recentScans.map((scan: Scan) => {
+                        // Find patient associated with this scan
+                        const patient = patients?.find((p: Patient) => p.id === scan.patientId);
+                        
+                        return (
+                          <tr key={scan.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                {patient ? patient.username : `Patient #${scan.patientId}`}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-500">
+                                {new Date(scan.createdAt).toLocaleDateString()}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 py-1 text-xs rounded-full ${
+                                scan.status === 'complete' 
+                                  ? 'bg-green-100 text-green-800'
+                                  : scan.status === 'processing'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : scan.status === 'error'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {scan.status.charAt(0).toUpperCase() + scan.status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {scan.aiDiagnosis || "Not available"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <Link to={`/scans/${scan.id}`} className="text-blue-600 hover:text-blue-900 mr-3">
+                                Review
+                              </Link>
+                              {patient && (
+                                <Link to={`/patients/${patient.id}`} className="text-indigo-600 hover:text-indigo-900">
+                                  Patient Profile
+                                </Link>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No recent scans to review.
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Patient List */}
+          <div className="lg:col-span-1">
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Your Patients
+                </h3>
+              </div>
+              
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Search patients..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              {patientsLoading ? (
+                <div className="text-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-500" />
+                  <p className="text-gray-600">Loading patients...</p>
+                </div>
+              ) : patientsError ? (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative text-center">
+                  <p>Failed to load patients. Please try again later.</p>
+                </div>
+              ) : filteredPatients.length > 0 ? (
+                <ul className="divide-y divide-gray-200">
+                  {filteredPatients.map((patient: Patient) => (
+                    <li key={patient.id} className="py-3">
+                      <Link to={`/patients/${patient.id}`}>
+                        <div className="flex items-center justify-between hover:bg-gray-50 p-2 rounded cursor-pointer">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{patient.username}</p>
+                            <p className="text-sm text-gray-500">{patient.email}</p>
+                          </div>
+                          <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : searchTerm ? (
+                <div className="text-center py-8 text-gray-500">
+                  No patients match your search.
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No patients yet. They will appear here once assigned.
+                </div>
+              )}
+            </div>
+            
+            {/* Quick Stats */}
+            <div className="bg-white shadow rounded-lg p-6 mt-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Quick Stats
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Total Patients</span>
+                  <span className="text-sm font-medium">{patients?.length || 0}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Pending Scans</span>
+                  <span className="text-sm font-medium">
+                    {recentScans?.filter((s: Scan) => s.status === 'complete' && !s.doctorNotes).length || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Completed Reviews</span>
+                  <span className="text-sm font-medium">
+                    {recentScans?.filter((s: Scan) => s.doctorNotes).length || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default DoctorDashboard;

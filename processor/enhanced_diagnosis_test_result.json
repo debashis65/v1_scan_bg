@@ -1,0 +1,688 @@
+{
+  "diagnosis": "Flat Feet (Pes Planus)",
+  "confidence": 0.8575,
+  "measurements": {
+    "length": 22.0,
+    "width": 7.0,
+    "archHeight": 0.7,
+    "instepHeight": 1.5
+  },
+  "assessment": "Your foot scan analysis identified serious concerns including Flat Feet (Pes Planus) (severe) and Shortened Stride Length (mild). Review the detailed findings for each condition and consider consulting with a healthcare professional for personalized advice on appropriate interventions, which may include specialized footwear, custom orthotics, or targeted exercises.",
+  "structured_diagnosis": {
+    "arch_type": "Flat Arch",
+    "arch_degree": 4,
+    "alignment": {
+      "forefoot": "varus",
+      "midfoot": "valgus",
+      "hindfoot": "valgus"
+    },
+    "pathologies": [
+      "Flat Feet (Pes Planus)",
+      "Shortened Stride Length"
+    ]
+  },
+  "recommendations": {
+    "orthotic_addons": [
+      "MAS (Medial Arch Support)",
+      "NAS (Navicular Arch Support)",
+      "Anterior Lateral Wedge",
+      "PAW (Pronator Anterior Wedge)",
+      "Posterior Medial Wedge",
+      "SPW (Supinator Posterior Wedge)"
+    ],
+    "abbreviation_map": {
+      "MAS": "Medial Arch Support",
+      "NAS": "Navicular Arch Support",
+      "PAW": "Pronator Anterior Wedge",
+      "SPW": "Supinator Posterior Wedge"
+    }
+  },
+  "detailed_results": {
+    "measurements": {
+      "length": 22.0,
+      "width": 7.0,
+      "arch_height": 0.7,
+      "instep_height": 1.5
+    },
+    "models": {
+      "arch_type": {
+        "name": "Arch Type Analysis",
+        "description": "Analyzes the arch of the foot to detect high arches, flat feet, or normal arches with advanced clinical correlation.",
+        "result": {
+          "condition": "flat_feet",
+          "condition_name": "Flat Feet (Pes Planus)",
+          "confidence": 0.8575,
+          "severity": "severe",
+          "description": "Your foot has a low or non-existent arch (Pes Planus), causing the entire sole to touch the ground when standing. This may lead to overpronation, where the foot rolls inward excessively during walking or running. Supportive shoes with good arch support may help alleviate discomfort. Flat feet can alter the biomechanical alignment of the leg, potentially contributing to issues in the ankles, knees, and hips over time if not addressed.",
+          "arch_measurements": {
+            "arch_height_index": 0.05,
+            "medial_arch_angle": 170.0,
+            "chippaux_smirak_index": 73.077,
+            "navicular_drop": 0.579,
+            "arch_rigidity_index": 0.61,
+            "staheli_index": 0.877,
+            "arch_height_mm": 7.8,
+            "arch_flexibility": 0.39,
+            "arch_index": 0.315,
+            "dynamic_deformation_index": 0.46799999999999997,
+            "medial_column_stability": 0.583,
+            "lateral_column_stability": 0.822,
+            "arch_energy_storage": 0.22619999999999998,
+            "arch_energy_return": 0.4284,
+            "gait_phase_deformation": {
+              "heel_strike": 0.0936,
+              "midstance": 0.46799999999999997,
+              "propulsion": 0.32759999999999995
+            },
+            "dynamic_arch_type": "moderately_flexible_arch",
+            "assessment_confidence": 0.85
+          },
+          "classification_methods": {
+            "arch_height_index": {
+              "classification": "flat_feet",
+              "confidence": 0.94,
+              "value": 0.05,
+              "normal_range": "0.24-0.31",
+              "method": "Arch Height Index"
+            },
+            "medial_arch_angle": {
+              "classification": "flat_feet",
+              "confidence": 1.0,
+              "value": 170.0,
+              "normal_range": "130-150\u00b0",
+              "method": "Medial Longitudinal Arch Angle"
+            },
+            "chippaux_smirak_index": {
+              "classification": "flat_feet",
+              "confidence": 1.0,
+              "value": 73.1,
+              "normal_range": "30-45%",
+              "method": "Chippaux-Smirak Index"
+            },
+            "navicular_drop": {
+              "classification": "flat_feet",
+              "confidence": 0.75,
+              "value": 0.58,
+              "normal_range": "0-0.5 cm",
+              "method": "Navicular Drop (Feiss Line)"
+            },
+            "arch_rigidity": {
+              "classification": "flat_feet",
+              "confidence": 0.6,
+              "arch_rigidity": "flexible",
+              "rigidity_confidence": 0.9,
+              "value": 0.61,
+              "normal_range": "0.85-0.90",
+              "method": "Functional Arch Rigidity Index",
+              "methodology_note": "This measurement is a functional estimate based on weight-bearing images. Traditional ARI compares non-weight-bearing to weight-bearing positions."
+            },
+            "dynamic_arch_response": {
+              "classification": "moderately_flexible_arch",
+              "confidence": 0.75,
+              "value": 0.468,
+              "description": "Balanced deformation during gait, good energy storage and return",
+              "normal_range": "Ideal range: 0.3-0.7",
+              "method": "Dynamic Arch Response"
+            }
+          },
+          "functional_impact": {
+            "stability": "reduced",
+            "shock_absorption": "moderate",
+            "pronation_risk": "increased",
+            "supination_risk": "low",
+            "fatigue_risk": "moderate to high",
+            "functional_note": "Flexible flatfoot may lead to excessive pronation during activity, potentially affecting alignment throughout the kinetic chain."
+          },
+          "biomechanical_implications": {
+            "gait_implications": "Increased pronation during midstance phase of gait, often with late or insufficient resupination during propulsion.",
+            "pressure_distribution": "Increased pressure in the medial midfoot and medial forefoot. Reduced pressure in the lateral forefoot.",
+            "muscle_implications": "Potential overuse of posterior tibialis muscle. Inner calf muscles may work harder to stabilize the arch.",
+            "joint_implications": "Increased stress on medial ankle joint and subtalar joint. Potential for altered mechanics at the knee and hip."
+          },
+          "treatment_recommendations": {
+            "footwear": [
+              "Shoes with firm midsoles",
+              "Motion control or stability shoes",
+              "Shoes with straight or semi-curved lasts",
+              "Enhanced cushioning for shock absorption"
+            ],
+            "orthotics": [
+              "Semi-rigid arch supports",
+              "Pre-fabricated orthotics with moderate arch support",
+              "Three-quarter length orthotics with medial arch support",
+              "Consider energy-return materials in orthotics"
+            ],
+            "exercises": [
+              "Arch strengthening exercises",
+              "Towel scrunches",
+              "Short foot exercises"
+            ],
+            "monitoring": [
+              "Recommend follow-up evaluation in 1-2 months"
+            ],
+            "specialist_referral": true,
+            "priority_level": "high"
+          },
+          "clinical_summary": "The foot assessment reveals a severe flatfoot deformity (pes planus) with a flexible arch structure. The arch height index of 0.05 is below normal range (0.24-0.31), and the medial longitudinal arch angle of 170.0\u00b0 is elevated (normal range: 130-150\u00b0). The Chippaux-Smirak Index of 73.1% indicates increased midfoot ground contact, consistent with lowered arch structure. The flexible nature of this flatfoot deformity suggests adequate capacity for adaptation, but may lead to increased fatigue with prolonged activity due to muscular demands of stabilizing the arch.",
+          "related_conditions": [
+            "Posterior tibial tendon dysfunction",
+            "Medial knee pain",
+            "Bunions",
+            "Achilles tendinopathy",
+            "Plantar fasciitis (medial)"
+          ],
+          "dynamic_assessment": {
+            "dynamic_deformation_index": 0.46799999999999997,
+            "medial_column_stability": 0.583,
+            "lateral_column_stability": 0.822,
+            "arch_energy_storage": 0.22619999999999998,
+            "arch_energy_return": 0.4284,
+            "gait_phase_deformation": {
+              "heel_strike": 0.0936,
+              "midstance": 0.46799999999999997,
+              "propulsion": 0.32759999999999995
+            },
+            "dynamic_arch_type": "moderately_flexible_arch",
+            "assessment_confidence": 0.85
+          },
+          "visualization_path": "../output/arch_analysis/arch_analysis_9276.jpg"
+        }
+      },
+      "pronation": {
+        "name": "Pronation Analysis",
+        "description": "Detects overpronation, underpronation (supination), or neutral pronation patterns.",
+        "result": {
+          "condition": "neutral_pronation",
+          "condition_name": "Neutral Pronation",
+          "confidence": 0.78,
+          "severity": "none",
+          "description": "Your foot shows a healthy neutral pronation pattern, with the foot rolling inward just the right amount when walking or running. This allows for optimal shock absorption and weight distribution. Neutral or stability running shoes are typically suitable for this pronation type.",
+          "measurements": {
+            "heel_angle": 0.2,
+            "arch_height": 0
+          }
+        }
+      },
+      "pressure": {
+        "name": "Pressure Distribution Analysis",
+        "description": "Analyzes the pressure distribution across the foot to detect potential issues.",
+        "result": {
+          "condition": "vascular_concern",
+          "condition_name": "Vascular Health Consideration",
+          "confidence": 0.95,
+          "description": "Your scan reveals pressure patterns that may affect foot circulation. Areas of high pressure combined with uneven distribution can potentially reduce blood flow to certain regions of the foot. Advanced vascular metrics indicate possible changes in tissue perfusion, pulse amplitude, and thermal patterns consistent with compromised circulation. This may be associated with sensations of coldness, numbness, or discomfort after prolonged standing or activity. The analysis suggests regional differences in blood flow that could benefit from targeted interventions. Attention to footwear with proper cushioning, orthotic modifications for pressure redistribution, and regular position changes when standing for long periods is recommended. Consider vascular health assessment if experiencing persistent symptoms. For those with diabetes, peripheral arterial disease, or other vascular conditions, close monitoring of these areas is particularly important for long-term foot health.",
+          "pressure_metrics": {
+            "forefoot_percentage": 24.5,
+            "midfoot_percentage": 51.9,
+            "rearfoot_percentage": 23.7,
+            "medial_percentage": 50.6,
+            "lateral_percentage": 49.4,
+            "forefoot_load_percentage": 24.5,
+            "midfoot_load_percentage": 51.9,
+            "rearfoot_load_percentage": 23.7,
+            "medial_load_percentage": 50.6,
+            "lateral_load_percentage": 49.4,
+            "forefoot_rearfoot_ratio": 1.03,
+            "medial_lateral_ratio": 1.02,
+            "forefoot_mean_pressure": 306.0,
+            "midfoot_mean_pressure": 306.0,
+            "rearfoot_mean_pressure": 306.0,
+            "forefoot_gradient": 0.0,
+            "midfoot_gradient": 0.0,
+            "rearfoot_gradient": 0.0,
+            "pressure_evenness": 0.0,
+            "forefoot_perfusion": 0.0,
+            "midfoot_perfusion": 0.0,
+            "rearfoot_perfusion": 0.0,
+            "overall_perfusion_index": 0.0,
+            "vascular_risk_score": 4.0,
+            "vascular_health": "good",
+            "pulse_amplitude": 0.0,
+            "forefoot_pulse_amplitude": 0.0,
+            "midfoot_pulse_amplitude": 0.0,
+            "rearfoot_pulse_amplitude": 0.0,
+            "relative_temperature": -5.7,
+            "arch_type_assessment": "low arch (flat foot)",
+            "foot_alignment_assessment": "neutral",
+            "skin_calibration": {
+              "skin_type": "type_3",
+              "melanin_index": 0.3,
+              "perfusion_adjustment": 1.05,
+              "pressure_threshold_adjustment": 1.0,
+              "calibration_description": "Perfusion and pressure metrics calibrated for type_3 skin type with melanin index of 0.30"
+            }
+          },
+          "region_analysis": {
+            "forefoot": {
+              "area_percentage": 24.5,
+              "average_pressure": 118.9,
+              "peak_pressure": 269.8,
+              "pressure_index": 1.19,
+              "pressure_gradient": 0.0,
+              "capillary_perfusion": 64.3,
+              "unit": "kPa",
+              "risk_level": "moderate",
+              "clinical_interpretation": "Elevated pressure - potential for discomfort; Reduced tissue perfusion - monitor for discomfort"
+            },
+            "forefoot_medial": {
+              "area_percentage": 6.8,
+              "average_pressure": 175.5,
+              "peak_pressure": 398.1,
+              "pressure_index": 1.75,
+              "pressure_gradient": 0.0,
+              "capillary_perfusion": 47.4,
+              "unit": "kPa",
+              "risk_level": "high",
+              "clinical_interpretation": "Excessive pressure - high risk of tissue damage; Compromised tissue perfusion - risk of ischemic damage"
+            },
+            "forefoot_central": {
+              "area_percentage": 12.2,
+              "average_pressure": 164.5,
+              "peak_pressure": 373.1,
+              "pressure_index": 1.64,
+              "pressure_gradient": 0.0,
+              "capillary_perfusion": 50.7,
+              "unit": "kPa",
+              "risk_level": "moderate",
+              "clinical_interpretation": "Excessive pressure - high risk of tissue damage; Reduced tissue perfusion - monitor for discomfort"
+            },
+            "forefoot_lateral": {
+              "area_percentage": 5.5,
+              "average_pressure": 157.2,
+              "peak_pressure": 356.5,
+              "pressure_index": 1.57,
+              "pressure_gradient": 0.0,
+              "capillary_perfusion": 52.9,
+              "unit": "kPa",
+              "risk_level": "moderate",
+              "clinical_interpretation": "Excessive pressure - high risk of tissue damage; Reduced tissue perfusion - monitor for discomfort"
+            },
+            "midfoot": {
+              "area_percentage": 51.9,
+              "average_pressure": 61.4,
+              "peak_pressure": 126.6,
+              "pressure_index": 0.61,
+              "pressure_gradient": 0.0,
+              "capillary_perfusion": 81.6,
+              "unit": "kPa",
+              "risk_level": "normal",
+              "clinical_interpretation": "Normal pressure magnitude"
+            },
+            "midfoot_medial": {
+              "area_percentage": 25.5,
+              "average_pressure": 41.1,
+              "peak_pressure": 84.8,
+              "pressure_index": 0.41,
+              "pressure_gradient": 0.0,
+              "capillary_perfusion": 87.7,
+              "unit": "kPa",
+              "risk_level": "normal",
+              "clinical_interpretation": "Normal pressure magnitude"
+            },
+            "midfoot_lateral": {
+              "area_percentage": 26.3,
+              "average_pressure": 50.1,
+              "peak_pressure": 103.4,
+              "pressure_index": 0.5,
+              "pressure_gradient": 0.0,
+              "capillary_perfusion": 85.0,
+              "unit": "kPa",
+              "risk_level": "normal",
+              "clinical_interpretation": "Normal pressure magnitude"
+            },
+            "rearfoot": {
+              "area_percentage": 23.7,
+              "average_pressure": 144.3,
+              "peak_pressure": 357.1,
+              "pressure_index": 1.44,
+              "pressure_gradient": 0.0,
+              "capillary_perfusion": 56.7,
+              "unit": "kPa",
+              "risk_level": "moderate",
+              "clinical_interpretation": "Excessive pressure - high risk of tissue damage; Reduced tissue perfusion - monitor for discomfort"
+            },
+            "rearfoot_medial": {
+              "area_percentage": 12.1,
+              "average_pressure": 244.1,
+              "peak_pressure": 604.3,
+              "pressure_index": 2.44,
+              "pressure_gradient": 0.0,
+              "capillary_perfusion": 26.8,
+              "unit": "kPa",
+              "risk_level": "high",
+              "clinical_interpretation": "Excessive pressure - high risk of tissue damage; Compromised tissue perfusion - risk of ischemic damage"
+            },
+            "rearfoot_lateral": {
+              "area_percentage": 11.6,
+              "average_pressure": 229.1,
+              "peak_pressure": 567.1,
+              "pressure_index": 2.29,
+              "pressure_gradient": 0.0,
+              "capillary_perfusion": 31.3,
+              "unit": "kPa",
+              "risk_level": "high",
+              "clinical_interpretation": "Excessive pressure - high risk of tissue damage; Compromised tissue perfusion - risk of ischemic damage"
+            },
+            "hallux": {
+              "area_percentage": 0.0,
+              "average_pressure": 135.1,
+              "peak_pressure": 223.0,
+              "pressure_index": 1.35,
+              "pressure_gradient": 0.0,
+              "capillary_perfusion": 59.5,
+              "unit": "kPa",
+              "risk_level": "normal",
+              "clinical_interpretation": "Normal pressure magnitude; Reduced tissue perfusion - monitor for discomfort"
+            }
+          },
+          "assessment": "Your scan reveals pressure patterns that may affect foot circulation. Areas of high pressure combined with uneven distribution can potentially reduce blood flow to certain regions of the foot. Advanced vascular metrics indicate possible changes in tissue perfusion, pulse amplitude, and thermal patterns consistent with compromised circulation. This may be associated with sensations of coldness, numbness, or discomfort after prolonged standing or activity. The analysis suggests regional differences in blood flow that could benefit from targeted interventions. Attention to footwear with proper cushioning, orthotic modifications for pressure redistribution, and regular position changes when standing for long periods is recommended. Consider vascular health assessment if experiencing persistent symptoms. For those with diabetes, peripheral arterial disease, or other vascular conditions, close monitoring of these areas is particularly important for long-term foot health.\n\nArch Type: Low arch (flat foot). The increased midfoot contact area suggests flat feet, which may contribute to medial loading and potential overpronation.\n\nFoot Alignment: Neutral. The balanced medial-lateral pressure distribution indicates good alignment, which typically provides optimal function and reduced injury risk.\n\nVascular Health: Good. Assessment includes skin tone calibration for medium skin type, ensuring accurate perfusion measurements. The pressure analysis indicates potential circulation concerns with a vascular risk score of 4.0/10 and an overall tissue perfusion index of 0.0%. The significantly reduced pulse amplitude of 0.00 suggests diminished vascular pulsatility, potentially indicating arterial stiffness or compromised circulation. The detected temperature difference of -5.7\u00b0C from normal indicates reduced surface temperature, which often correlates with decreased perfusion. Areas of potential circulatory concern include the forefoot (with significantly reduced pulse amplitude), midfoot (with significantly reduced pulse amplitude), rearfoot (with significantly reduced pulse amplitude). Reduced blood flow to these areas may contribute to temperature differences, numbness, or discomfort with prolonged activity.\n\nPotential Problem Areas:\n- Forefoot: Moderate pressure (269.8 kPa)\n- Forefoot Medial: High pressure (398.1 kPa), which may contribute to first MTP joint stress or hallux valgus.\n- Forefoot Central: Moderate pressure (373.1 kPa), which may contribute to metatarsalgia or stress fractures.\n- Forefoot Lateral: Moderate pressure (356.5 kPa), which may contribute to fifth metatarsal stress or lateral forefoot pain.\n- Rearfoot: Moderate pressure (357.1 kPa)\n- Rearfoot Medial: High pressure (604.3 kPa), which may contribute to medial heel pain or plantar fasciitis.\n- Rearfoot Lateral: High pressure (567.1 kPa), which may contribute to lateral heel pain or calcaneal stress.",
+          "recommendations": {
+            "footwear": [
+              "Shoes with maximal cushioning throughout the entire sole",
+              "Shoes with ample depth to accommodate circulation-promoting insoles",
+              "Seamless upper construction to reduce pressure points",
+              "Shoes with zero-drop design to optimize blood flow",
+              "Consider shoes with enhanced thermal properties to maintain foot warmth",
+              "Shoes with a wide toe box to accommodate the first MTP joint"
+            ],
+            "orthotics": [
+              "Pressure-relief orthotics with soft, multilayer materials",
+              "Custom orthotics with selective offloading of high-pressure areas",
+              "Consider insoles with thermal reflective properties to maintain warmth",
+              "Orthotic with specific forefoot modifications to promote circulation",
+              "Heel cushions with cutouts to reduce pressure on compromised areas",
+              "Orthotic with medial arch support to reduce excessive pronation",
+              "Consider orthotic modification to offload first MTP joint"
+            ],
+            "activity": [
+              "Gradual warm-up periods before extended activity to improve circulation",
+              "Toe spreading and toe flexor exercises to enhance forefoot circulation",
+              "Regular toe flexion and extension exercises to promote blood flow",
+              "Frequent position changes when standing or sitting for extended periods",
+              "Calf pumping exercises (ankle pumps) throughout the day",
+              "Gentle walking program to improve peripheral circulation",
+              "Short foot exercises to strengthen arch muscles"
+            ],
+            "evaluation": [
+              "Consider vascular assessment if experiencing cold feet, numbness, or color changes",
+              "Consider specialized vascular testing to assess arterial elasticity and function",
+              "Consider thermal imaging assessment to evaluate circulation patterns",
+              "Discuss potential circulation issues with healthcare provider",
+              "Urgent vascular consultation recommended due to significantly reduced perfusion",
+              "Consider comprehensive arch evaluation if symptoms persist",
+              "Evaluate for hallux valgus or first MTP joint pathology"
+            ]
+          },
+          "visualization_path": "../output/pressure_maps/pressure_map_1868.jpg",
+          "skin_tone_analysis": {
+            "detected_skin_type": "type_3",
+            "description": "Skin type type_3 with melanin index of 0.30",
+            "melanin_index": 0.3,
+            "rgb_mean": [
+              0,
+              0,
+              0
+            ],
+            "rgb_std": [
+              0,
+              0,
+              0
+            ],
+            "vascular_visibility_index": 0.5,
+            "calibration_applied": false,
+            "adjustment_factors": {
+              "perfusion_adjustment": 1.05,
+              "pressure_threshold_adjustment": 1.0,
+              "channel_weights": [
+                1.0,
+                1.0,
+                1.0
+              ]
+            },
+            "detailed_metrics": {
+              "hemoglobin_index": 0.0,
+              "uniformity_index": 0.0,
+              "r_g_ratio": 1.0,
+              "melanin_contribution": 0.0
+            },
+            "clinical_relevance": {
+              "vascular_assessment_impact": "The skin tone affects optical perfusion measurements - specialized calibration has been applied for accurate vascular readings.",
+              "pressure_reading_impact": "Pressure readings and thresholds are adjusted based on detected skin tone to ensure consistent diagnostic accuracy.",
+              "recommended_calibration": "Standard imaging techniques with minor RGB optimization for optimal assessment."
+            },
+            "fitzpatrick_reference": {
+              "type": "type_3",
+              "reference_rgb": [
+                198,
+                165,
+                140
+              ],
+              "range": [
+                0.25,
+                0.4
+              ]
+            },
+            "calibration_profile": {
+              "method": "Multi-colorspace adaptive calibration for type_3",
+              "enhancement_applied": "Balanced contrast enhancement",
+              "analysis_interpretation": "Skin tone calibration has been applied to ensure equitable diagnostic assessment across all patient demographics."
+            },
+            "calibration_impact": "The pressure metrics have been adjusted to account for the detected skin tone, ensuring accurate vascular health assessment across different patient demographics."
+          },
+          "rgb_analysis": {
+            "error": "No color image available for RGB analysis"
+          }
+        }
+      },
+      "deformity": {
+        "name": "Structural Deformity Analysis",
+        "description": "Detects common foot deformities such as bunions, hammer toes, and claw toes.",
+        "result": {
+          "condition": "no_deformity",
+          "condition_name": "No Structural Deformities",
+          "confidence": 0.87,
+          "severity": "none",
+          "description": "Your foot appears to have normal structural alignment without signs of significant deformities. This suggests good joint alignment and toe positioning, which helps maintain proper foot function and reduces the risk of pain and complications.",
+          "features": {
+            "hallux_valgus_angle": 3.740357743258191,
+            "first_metatarsal_angle": 0.59539648631926,
+            "pip_flexion": 0.2298660764704108,
+            "dip_flexion": 0.5237650029722849,
+            "mtp_extension": 1.5460380950046595
+          }
+        }
+      },
+      "gait": {
+        "name": "Gait Pattern Analysis",
+        "description": "Analyzes walking patterns to detect gait abnormalities and suggest improvements.",
+        "result": {
+          "condition": "short_stride",
+          "condition_name": "Shortened Stride Length",
+          "confidence": 0.76,
+          "severity": "mild",
+          "description": "Your gait shows a shorter-than-optimal stride length, which may reduce walking efficiency and potentially indicate tightness in hip flexors or other muscle groups. Stretching and gait training exercises may help improve stride length and walking economy.",
+          "gait_parameters": {
+            "pronation_degree": 0.6,
+            "stride_length": 0.46,
+            "cadence": 105.3,
+            "stance_percentage": 61.8,
+            "asymmetry_index": 0.12
+          }
+        }
+      },
+      "footwear": {
+        "name": "Footwear Recommendation",
+        "description": "Suggests optimal footwear types based on foot structure and biomechanics.",
+        "result": {
+          "condition": "flat_feet",
+          "condition_name": "Flat Feet",
+          "confidence": 0.85,
+          "description": "Your flat feet would benefit from shoes with good arch support and stability features. Look for motion control or stability shoes that help prevent overpronation. Avoid minimalist shoes with little support which may contribute to foot fatigue and pain.",
+          "pronation_tendency": "overpronation",
+          "width_category": "narrow",
+          "recommendations": {
+            "walking": {
+              "features": {
+                "arch_support": "maximum",
+                "cushioning": "moderate",
+                "stability": "maximum",
+                "width": "narrow",
+                "heel_drop": "low"
+              },
+              "example_models": [
+                {
+                  "brand": "Adidas",
+                  "model": "Cloudfoam Stability",
+                  "price_range": "$80-$140"
+                },
+                {
+                  "brand": "Asics",
+                  "model": "Metrolyte Stability",
+                  "price_range": "$190-$160"
+                },
+                {
+                  "brand": "New Balance",
+                  "model": "574 Stability",
+                  "price_range": "$100-$170"
+                }
+              ]
+            },
+            "running": {
+              "features": {
+                "arch_support": "maximum",
+                "cushioning": "maximum",
+                "stability": "maximum",
+                "width": "narrow",
+                "heel_drop": "low"
+              },
+              "example_models": [
+                {
+                  "brand": "Adidas",
+                  "model": "Ultraboost Stability",
+                  "price_range": "$170-$160"
+                },
+                {
+                  "brand": "Asics",
+                  "model": "Gel-Nimbus Stability",
+                  "price_range": "$180-$130"
+                },
+                {
+                  "brand": "Nike",
+                  "model": "React Infinity Stability",
+                  "price_range": "$100-$130"
+                }
+              ]
+            },
+            "hiking": {
+              "features": {
+                "arch_support": "maximum",
+                "cushioning": "moderate",
+                "stability": "maximum",
+                "width": "narrow",
+                "heel_drop": "low"
+              },
+              "example_models": [
+                {
+                  "brand": "Nike",
+                  "model": "Pegasus Trail Stability",
+                  "price_range": "$180-$240"
+                },
+                {
+                  "brand": "Asics",
+                  "model": "Gel-Venture Stability",
+                  "price_range": "$190-$180"
+                },
+                {
+                  "brand": "Brooks",
+                  "model": "Catamount Stability",
+                  "price_range": "$80-$230"
+                }
+              ]
+            },
+            "casual": {
+              "features": {
+                "arch_support": "maximum",
+                "cushioning": "minimal",
+                "stability": "maximum",
+                "width": "narrow",
+                "heel_drop": "low"
+              },
+              "example_models": [
+                {
+                  "brand": "Brooks",
+                  "model": "Dyad Stability",
+                  "price_range": "$90-$200"
+                },
+                {
+                  "brand": "Hoka",
+                  "model": "Clifton Edge Stability",
+                  "price_range": "$150-$190"
+                },
+                {
+                  "brand": "Nike",
+                  "model": "Court Vision Stability",
+                  "price_range": "$80-$200"
+                }
+              ]
+            },
+            "formal": {
+              "features": {
+                "arch_support": "maximum",
+                "cushioning": "minimal",
+                "stability": "maximum",
+                "width": "narrow",
+                "heel_drop": "medium"
+              },
+              "example_models": [
+                {
+                  "brand": "Asics",
+                  "model": "GEL-Cumulus Stability",
+                  "price_range": "$100-$120"
+                },
+                {
+                  "brand": "Brooks",
+                  "model": "Addiction Walker Stability",
+                  "price_range": "$170-$230"
+                },
+                {
+                  "brand": "New Balance",
+                  "model": "990 Stability",
+                  "price_range": "$100-$170"
+                }
+              ]
+            },
+            "athletic": {
+              "features": {
+                "arch_support": "maximum",
+                "cushioning": "minimal",
+                "stability": "maximum",
+                "width": "narrow",
+                "heel_drop": "low"
+              },
+              "example_models": [
+                {
+                  "brand": "New Balance",
+                  "model": "574 Stability",
+                  "price_range": "$160-$120"
+                },
+                {
+                  "brand": "Saucony",
+                  "model": "Shadow Stability",
+                  "price_range": "$150-$200"
+                },
+                {
+                  "brand": "Brooks",
+                  "model": "Beast Stability",
+                  "price_range": "$80-$160"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "diagnosis": "Flat Feet (Pes Planus)",
+    "confidence": 0.8575,
+    "description": "Your foot scan analysis identified serious concerns including Flat Feet (Pes Planus) (severe) and Shortened Stride Length (mild). Review the detailed findings for each condition and consider consulting with a healthcare professional for personalized advice on appropriate interventions, which may include specialized footwear, custom orthotics, or targeted exercises."
+  }
+}

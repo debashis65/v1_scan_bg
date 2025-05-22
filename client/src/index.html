@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barogrip - Foot Health Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .component-preview {
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+    .component-header {
+      padding: 1rem;
+      background-color: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      border-top-left-radius: 0.5rem;
+      border-top-right-radius: 0.5rem;
+    }
+    .component-display {
+      padding: 1.5rem;
+    }
+    .component-code {
+      background-color: #f9fafb;
+      padding: 1rem;
+      border-top: 1px solid #e5e7eb;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <h1 class="text-3xl font-bold text-gray-900">Barogrip UI Components</h1>
+    </div>
+  </header>
+  
+  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+      <p class="text-lg text-gray-700 mb-8">
+        Below is a showcase of the modernized UI components for the Barogrip foot health platform. These components have been built using React, TypeScript, and Tailwind CSS.
+      </p>
+
+      <!-- Login Page Preview -->
+      <div class="component-preview">
+        <div class="component-header">
+          <h2 class="text-xl font-semibold text-gray-900">Login Page</h2>
+        </div>
+        <div class="component-display">
+          <img src="https://via.placeholder.com/800x500?text=Login+Page+Screenshot" alt="Login Page" class="w-full rounded">
+        </div>
+        <div class="component-code">
+          Location: src/pages/auth/LoginPage.tsx
+          Features:
+          - Role-based login (doctor, patient, admin)
+          - Form validation
+          - "Remember me" option
+          - Password recovery link
+        </div>
+      </div>
+
+      <!-- Registration Page Preview -->
+      <div class="component-preview">
+        <div class="component-header">
+          <h2 class="text-xl font-semibold text-gray-900">Registration Page</h2>
+        </div>
+        <div class="component-display">
+          <img src="https://via.placeholder.com/800x500?text=Registration+Page+Screenshot" alt="Registration Page" class="w-full rounded">
+        </div>
+        <div class="component-code">
+          Location: src/pages/auth/RegisterPage.tsx
+          Features:
+          - Role-specific fields for doctors and patients
+          - Password strength indicator
+          - Form validation
+          - Terms and conditions agreement
+        </div>
+      </div>
+
+      <!-- Doctor Dashboard Preview -->
+      <div class="component-preview">
+        <div class="component-header">
+          <h2 class="text-xl font-semibold text-gray-900">Doctor Dashboard</h2>
+        </div>
+        <div class="component-display">
+          <img src="https://via.placeholder.com/800x500?text=Doctor+Dashboard+Screenshot" alt="Doctor Dashboard" class="w-full rounded">
+        </div>
+        <div class="component-code">
+          Location: src/pages/doctor/DashboardPage.tsx
+          Features:
+          - Statistics overview (patients, scans, appointments)
+          - Recent scans with status indicators
+          - Today's appointments
+          - Quick action buttons
+        </div>
+      </div>
+
+      <!-- Patient Dashboard Preview -->
+      <div class="component-preview">
+        <div class="component-header">
+          <h2 class="text-xl font-semibold text-gray-900">Patient Dashboard</h2>
+        </div>
+        <div class="component-display">
+          <img src="https://via.placeholder.com/800x500?text=Patient+Dashboard+Screenshot" alt="Patient Dashboard" class="w-full rounded">
+        </div>
+        <div class="component-code">
+          Location: src/pages/patient/DashboardPage.tsx
+          Features:
+          - Personal statistics and foot health score
+          - Recent scans
+          - Upcoming appointments
+          - Treatment recommendations with completion tracking
+        </div>
+      </div>
+
+      <!-- Patient Detail Page Preview -->
+      <div class="component-preview">
+        <div class="component-header">
+          <h2 class="text-xl font-semibold text-gray-900">Patient Detail Page</h2>
+        </div>
+        <div class="component-display">
+          <img src="https://via.placeholder.com/800x500?text=Patient+Detail+Page+Screenshot" alt="Patient Detail Page" class="w-full rounded">
+        </div>
+        <div class="component-code">
+          Location: src/pages/doctor/PatientDetailPage.tsx
+          Features:
+          - Patient personal and medical information
+          - Tabbed interface for scans, appointments, and notes
+          - Ability to add notes to patient record
+          - Quick action buttons (book appointment, request scan)
+        </div>
+      </div>
+
+      <!-- Scan Detail Page Preview -->
+      <div class="component-preview">
+        <div class="component-header">
+          <h2 class="text-xl font-semibold text-gray-900">Scan Detail Page</h2>
+        </div>
+        <div class="component-display">
+          <img src="https://via.placeholder.com/800x500?text=Scan+Detail+Page+Screenshot" alt="Scan Detail Page" class="w-full rounded">
+        </div>
+        <div class="component-code">
+          Location: src/pages/scan/ScanDetailPage.tsx
+          Features:
+          - Visualizations of foot scan data
+          - AI diagnosis with confidence score
+          - Treatment recommendations
+          - Role-specific actions (download report, download 3D model)
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-white">
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <p class="text-center text-gray-500">Barogrip Medical Technologies © 2025</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,37 @@
+sudo -u postgres psql -d barogrip_db -c "\d scans"
+                                             Table "public.scans"
+        Column        |            Type             | Collation | Nullable |              Default              
+----------------------+-----------------------------+-----------+----------+-----------------------------------
+ id                   | integer                     |           | not null | nextval('scans_id_seq'::regclass)
+ patient_id           | integer                     |           | not null | 
+ status               | text                        |           | not null | 'queued'::text
+ status_message       | text                        |           |          | 
+ error_type           | text                        |           |          | 
+ retry_count          | integer                     |           |          | 0
+ process_started_at   | timestamp without time zone |           |          | 
+ process_completed_at | timestamp without time zone |           |          | 
+ obj_url              | text                        |           |          | 
+ stl_url              | text                        |           |          | 
+ thumbnail_url        | text                        |           |          | 
+ ai_diagnosis         | text                        |           |          | 
+ ai_diagnosis_details | jsonb                       |           |          | 
+ ai_confidence        | real                        |           |          | 
+ doctor_notes         | text                        |           |          | 
+ doctor_id            | integer                     |           |          | 
+ foot_length          | real                        |           |          | 
+ foot_width           | real                        |           |          | 
+ arch_height          | real                        |           |          | 
+ instep_height        | real                        |           |          | 
+ is_encrypted         | boolean                     |           |          | false
+ encryption_details   | jsonb                       |           |          | 
+ created_at           | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at           | timestamp without time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "scans_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "scans_doctor_id_fkey" FOREIGN KEY (doctor_id) REFERENCES users(id)
+    "scans_patient_id_fkey" FOREIGN KEY (patient_id) REFERENCES users(id)
+Referenced by:
+    TABLE "consultations" CONSTRAINT "consultations_scan_id_fkey" FOREIGN KEY (scan_id) REFERENCES scans(id)
+    TABLE "prescriptions" CONSTRAINT "prescriptions_scan_id_fkey" FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE CASCADE
+    TABLE "scan_images" CONSTRAINT "scan_images_scan_id_fkey" FOREIGN KEY (scan_id) REFERENCES scans(id) ON DELETE CASCADE

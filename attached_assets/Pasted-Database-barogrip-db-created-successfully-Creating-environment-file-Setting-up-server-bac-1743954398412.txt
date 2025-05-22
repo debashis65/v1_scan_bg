@@ -1,0 +1,40 @@
+Database barogrip_db created successfully
+⚙️ Creating environment file...
+🔧 Setting up server backend...
+./install_barogrip.sh: line 79: cd: /var/www/barogrip/server: No such file or directory
+cp: '/var/www/barogrip/.env' and './.env' are the same file
+npm error code ENOENT
+npm error syscall open
+npm error path /var/www/barogrip/package.json
+npm error errno -2
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/var/www/barogrip/package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: /root/.npm/_logs/2025-04-06T15_44_53_091Z-debug-0.log
+npm error code ENOENT
+npm error syscall open
+npm error path /var/www/barogrip/package.json
+npm error errno -2
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/var/www/barogrip/package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: /root/.npm/_logs/2025-04-06T15_44_53_571Z-debug-0.log
+👤 Setting up client...
+./install_barogrip.sh: line 86: cd: /var/www/barogrip/client: No such file or directory
+npm error code ENOENT
+npm error syscall open
+npm error path /var/www/barogrip/package.json
+npm error errno -2
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/var/www/barogrip/package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: /root/.npm/_logs/2025-04-06T15_44_53_705Z-debug-0.log
+npm error code ENOENT
+npm error syscall open
+npm error path /var/www/barogrip/package.json
+npm error errno -2
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/var/www/barogrip/package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: /root/.npm/_logs/2025-04-06T15_44_54_092Z-debug-0.log
+🧠 Setting up Python processor...

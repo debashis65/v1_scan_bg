@@ -1,0 +1,11 @@
+{
+  "enabled_models": ["arch_type", "pronation", "pressure", "deformity", "gait", "footwear"],
+  "confidence_thresholds": {
+    "arch_type": 0.65,
+    "pronation": 0.6,
+    "pressure": 0.6,
+    "deformity": 0.7,
+    "gait": 0.6,
+    "footwear": 0.7
+  }
+}

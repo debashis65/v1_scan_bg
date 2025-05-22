@@ -1,0 +1,128 @@
+{
+  "hind_foot_valgus_angle": {
+    "value": {
+      "right": 9.3,
+      "left": 4.5
+    },
+    "unit": "degrees",
+    "normal_range": "0-5°",
+    "severity": {
+      "right": "moderate",
+      "left": "none"
+    },
+    "interpretation": {
+      "right": "moderate valgus",
+      "left": "normal alignment"
+    },
+    "clinical_use": "Assessment of subtalar joint alignment",
+    "treatment_implications": "May require motion control footwear or orthotics if excessive"
+  },
+  "hind_foot_varus_angle": {
+    "value": {
+      "right": 0.8,
+      "left": 1.2
+    },
+    "unit": "degrees",
+    "normal_range": "0-4°",
+    "interpretation": "normal",
+    "clinical_use": "Assessment of subtalar joint alignment",
+    "treatment_implications": "May require cushioned footwear or lateral posting if excessive"
+  },
+  "arch_height_index": {
+    "value": 0.217,
+    "unit": "ratio",
+    "normal_range": "0.24-0.31",
+    "interpretation": "low arch (pes planus)",
+    "clinical_use": "Quantification of arch height",
+    "treatment_implications": "Low values may indicate need for arch support"
+  },
+  "arch_rigidity_index": {
+    "value": 0.842,
+    "unit": "ratio",
+    "normal_range": ">0.85",
+    "interpretation": "flexible arch",
+    "clinical_use": "Assessment of arch flexibility",
+    "treatment_implications": "Low values indicate need for greater support in dynamic activities"
+  },
+  "medial_longitudinal_arch_angle": {
+    "value": {
+      "right": 152.6,
+      "left": 153.7
+    },
+    "unit": "degrees",
+    "normal_range": "130-150°",
+    "interpretation": {
+      "right": "low arch (pes planus)",
+      "left": "low arch (pes planus)"
+    },
+    "clinical_use": "Assessment of arch structure",
+    "treatment_implications": "Extreme values may require custom orthotics"
+  },
+  "chippaux_smirak_index": {
+    "value": {
+      "right": 42.3,
+      "left": 47.8
+    },
+    "unit": "percent",
+    "normal_range": "30-45%",
+    "interpretation": {
+      "right": "normal arch",
+      "left": "low arch (pes planus)"
+    },
+    "clinical_use": "Footprint-based arch assessment",
+    "treatment_implications": "High values may indicate need for medial arch support"
+  },
+  "valgus_index": {
+    "value": {
+      "right": 14.6,
+      "left": 15.2
+    },
+    "unit": "percent",
+    "normal_range": "5-15%",
+    "interpretation": {
+      "right": "normal foot",
+      "left": "valgus foot"
+    },
+    "clinical_use": "Assessment of pronation/supination tendency",
+    "treatment_implications": "Guides lateral or medial posting in orthotics"
+  },
+  "arch_angle": {
+    "value": {
+      "right": 35.6,
+      "left": 32.8
+    },
+    "unit": "degrees",
+    "normal_range": "35-45°",
+    "interpretation": {
+      "right": "normal arch",
+      "left": "low arch (pes planus)"
+    },
+    "clinical_use": "Footprint-based arch assessment",
+    "treatment_implications": "Guides arch support height in orthotics"
+  },
+  "foot_posture_index": {
+    "value": 7,
+    "unit": "score",
+    "components": {
+      "talar_head": 2,
+      "malleolar_curvature": 1,
+      "calcaneal_position": 1,
+      "talonavicular_bulge": 1,
+      "mla_congruence": 1,
+      "forefoot_alignment": 1
+    },
+    "normal_range": "0 to +5",
+    "interpretation": "pronated",
+    "clinical_use": "Comprehensive foot posture assessment",
+    "treatment_implications": "Guides orthotic prescription and footwear recommendations"
+  },
+  "photoplethysmography": {
+    "pulse_amplitude": 0.93,
+    "vascularity_score": 6.3,
+    "unit": "score",
+    "normal_range": "4-7",
+    "interpretation": "normal peripheral circulation",
+    "clinical_use": "Assessment of peripheral vascular health and circulation",
+    "treatment_implications": "May indicate need for vascular consultation if significantly reduced"
+  }
+}

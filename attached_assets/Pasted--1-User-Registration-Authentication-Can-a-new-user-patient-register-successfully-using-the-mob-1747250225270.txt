@@ -1,0 +1,63 @@
+✅ 1. User Registration & Authentication
+Can a new user (patient) register successfully using the mobile app?
+
+Does the system validate required fields (name, age, email, etc.) during registration?
+
+Can the user log in and view their dashboard after registration?
+
+Are forgotten passwords and reset flows working correctly?
+
+Is the user correctly assigned the patient or doctor role based on form input or admin action?
+
+✅ 2. Photo Capture & Scanning Workflow
+Does the app guide the user to place the phone correctly before capturing?
+
+Are real-time validations triggered for blur, lighting, and distance?
+
+Are all 5 required positions (front, sides, back, top) being captured sequentially with guidance?
+
+If a position is skipped or invalid, does the app prompt for correction?
+
+Does the app show scan progress status and feedback during the process (e.g., uploading, processing)?
+
+✅ 3. Scan Submission & Processing
+Is the scan data (images or 3D mesh inputs) successfully uploaded to the backend?
+
+Does the server process the scan and return status updates (via WebSocket or polling)?
+
+Is the AI diagnosis triggered automatically after scan submission completes?
+
+✅ 4. 3D Model & AI Measurements
+Is the 3D foot model correctly generated and viewable in the app/web interface?
+
+Does the system calculate and store key metrics:
+
+AHI (Arch Height Index)
+
+ARI (Arch Rigidity Index)
+
+FPI (Foot Posture Index)
+
+Pressure zone scores
+
+PPG score
+
+✅ 5. Report Generation & Interpretation
+Is the user able to view a structured diagnosis in the app or web dashboard?
+
+Is the doctor dashboard displaying all scan data, AI interpretation, and metrics?
+
+Is the full PDF/HTML report generated and downloadable (with AI + doctor notes)?
+
+Does the system clearly show any pressure hotspots or arch asymmetries in the visual output?
+
+Are users receiving diagnosis alerts, follow-ups, or report availability notifications correctly?
+
+📌 Bonus / Advanced Tests (Optional)
+Can the doctor override AI diagnosis and save their own notes and prescription?
+
+Does the scan history compare past and new scans for progress tracking?
+
+Are invalid or incomplete scans gracefully rejected or flagged for retake?
+
+Are PDF reports consistent with JSON summary data returned by the backend?

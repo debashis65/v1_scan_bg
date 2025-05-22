@@ -1,0 +1,24 @@
+pm2 show barogrip-processor
+ Describing process with id 3 - name barogrip-processor 
+┌───────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ status            │ errored                                                                                              │
+│ name              │ barogrip-processor                                                                                   │
+│ namespace         │ default                                                                                              │
+│ version           │ 1.0.0                                                                                                │
+│ restarts          │ 45                                                                                                   │
+│ uptime            │ 0                                                                                                    │
+│ script path       │ /var/www/barogrip/processor/processor.py                                                             │
+│ script args       │ --input-dir /var/www/barogrip/input --output-dir /var/www/barogrip/output --monitor --log-level INFO │
+│ error log path    │ /root/.pm2/logs/barogrip-processor-error.log                                                         │
+│ out log path      │ /root/.pm2/logs/barogrip-processor-out.log                                                           │
+│ pid path          │ /root/.pm2/pids/barogrip-processor-3.pid                                                             │
+│ interpreter       │ python3                                                                                              │
+│ interpreter args  │ N/A                                                                                                  │
+│ script id         │ 3                                                                                                    │
+│ exec cwd          │ /root                                                                                                │
+│ exec mode         │ fork_mode                                                                                            │
+│ node.js version   │ N/A                                                                                                  │
+│ node env          │ N/A                                                                                                  │
+│ watch & reload    │ ✘                                                                                                    │
+│ unstable restarts │ 0                                                                                                    │
+│ created at        │ N/A       

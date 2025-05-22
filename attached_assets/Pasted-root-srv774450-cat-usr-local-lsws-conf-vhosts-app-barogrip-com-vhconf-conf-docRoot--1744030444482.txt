@@ -1,0 +1,72 @@
+root@srv774450:~# cat /usr/local/lsws/conf/vhosts/app.barogrip.com/vhconf.conf
+docRoot                   /var/www/barogrip/client/dist
+vhDomain                  app.barogrip.com
+vhAliases                 www.app.barogrip.com
+adminEmails               admin@barogrip.com
+enableGzip                1
+enableIpGeo               1
+
+context / {
+  location                /var/www/barogrip/client/dist
+  allowBrowse             1
+  addDefaultCharset       off
+}
+
+context /api {
+  type                    proxy
+  handler                 api_server
+  addDefaultCharset       off
+}
+
+vhssl  {
+  keyFile                 /etc/letsencrypt/live/barogrip.com/privkey.pem
+  certFile                /etc/letsencrypt/live/barogrip.com/fullchain.pem
+  certChain               1
+}
+
+root@srv774450:~# cat /var/www/barogrip/serve-client.js
+const express = require('express');
+const path = require('path');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+
+const app = express();
+const PORT = 5000; // Replit expects port 5000 for web applications
+
+// Log all incoming requests for debugging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
+// Proxy API requests to the backend server
+app.use('/api', createProxyMiddleware({
+  target: 'http://localhost:3000',
+  changeOrigin: true,
+  logLevel: 'debug'
+}));
+
+// Proxy WebSocket requests to the backend server
+app.use('/ws', createProxyMiddleware({
+  target: 'ws://localhost:3000',
+  ws: true,
+  changeOrigin: true,
+  logLevel: 'debug'
+}));
+
+// Serve static files from the client build directory
+app.use(express.static(path.join(__dirname, 'client/dist')));
+
+// For any request not targeting a specific file, send the index.html
+app.get('*', (req, res) => {
+  console.log('Serving index.html for path:', req.path);
+  res.sendFile(path.join(__dirname, 'client/dist/index.html'));
+});
+
+// Get the Replit domain for messaging
+const replitDomain = process.env.REPLIT_DOMAINS || '(unknown domain)';
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Client app is running on port ${PORT}`);
+  console.log(`Replit domain: ${replitDomain}`);
+  console.log(`Your application should be accessible at: https://${replitDomain}`);
+});

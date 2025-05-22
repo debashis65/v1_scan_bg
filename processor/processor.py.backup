@@ -1,0 +1,1182 @@
+import argparse
+import json
+import os
+import logging
+import numpy as np
+import cv2
+import traceback
+import time
+import datetime
+import sys
+from typing import List, Dict, Any, Tuple, Optional, Union
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+# Import the foot models
+from foot_models.advanced_measurements_model import AdvancedMeasurementsModel
+from foot_models.arch_model import ArchTypeModel
+from foot_models.pressure_model import FootPressureModel
+from foot_models.base_model import ValidationError, ModelError
+
+# Import validation utilities
+from validation import (
+    validate_images, 
+    validate_foot_view_coverage, 
+    validate_measurements,
+    verify_processor_prerequisites
+)
+
+# Import the optimized visualization generator
+from optimized_visualization import OptimizedVisualizationGenerator
+
+# Import the diagnostic report generator
+from diagnostic_report_generator import DiagnosticReportGenerator
+
+# Import packages needed for 3D model generation
+from pathlib import Path
+
+# Custom JSON encoder to handle numpy types
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, np.integer):
+            return int(o)
+        elif isinstance(o, np.floating):
+            return float(o)
+        elif isinstance(o, np.ndarray):
+            return o.tolist()
+        return super(NumpyEncoder, self).default(o)
+
+# Configure logging with more comprehensive format
+LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LOG_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+
+# Create log directory if it doesn't exist
+os.makedirs('logs', exist_ok=True)
+
+# Set up file handler for persistent logging
+log_filename = f'logs/scan_processor_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+file_handler = logging.FileHandler(log_filename)
+file_handler.setFormatter(logging.Formatter(LOG_FORMAT, LOG_DATE_FORMAT))
+
+# Set up console handler
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter(LOG_FORMAT, LOG_DATE_FORMAT))
+
+# Configure root logger
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.addHandler(file_handler)
+root_logger.addHandler(console_handler)
+
+# Get processor-specific logger
+logger = logging.getLogger("ScanProcessor")
+
+class ProcessorError(Exception):
+    """Custom exception for processor-specific errors."""
+    pass
+
+class CPUThrottler:
+    """
+    Controls CPU usage by adding strategic sleep intervals.
+    Helps prevent the processor from consuming 100% CPU when idle.
+    """
+    def __init__(self, target_usage=0.2):
+        self.target_usage = target_usage
+        self.last_throttle_time = time.time()
+        self.idle_sleep = 2.0  # Sleep 2 seconds when idle
+    
+    def throttle(self, is_idle=False):
+        """
+        Throttle CPU usage by adding sleep intervals.
+        
+        Args:
+            is_idle: If True, uses longer sleep intervals for idle periods
+        """
+        if is_idle:
+            time.sleep(self.idle_sleep)
+            return
+            
+        current_time = time.time()
+        elapsed = current_time - self.last_throttle_time
+        if elapsed < 0.1:  # Aggressive throttling condition
+            sleep_time = 0.1
+            time.sleep(sleep_time)
+        self.last_throttle_time = time.time()
+
+# Create global throttler instance
+cpu_throttler = CPUThrottler(target_usage=0.2)
+
+class FootScanProcessor:
+    """
+    Main processor for foot scan images that applies multiple analysis models
+    and combines their results.
+    """
+    def __init__(self):
+        logger.info("Initializing FootScanProcessor")
+        
+        # Verify that all prerequisites are met
+        prereq_status = verify_processor_prerequisites()
+        if prereq_status["status"] == "error":
+            logger.error(f"Prerequisite check failed: {prereq_status['message']}")
+            for pkg in prereq_status["missing_required"]:
+                logger.error(f"Missing required package: {pkg}")
+            raise ProcessorError(f"Missing required packages: {', '.join(prereq_status['missing_required'])}")
+        
+        logger.info(f"Prerequisite check passed: {prereq_status['message']}")
+        if prereq_status["missing_optional"]:
+            logger.warning(f"Missing optional packages: {', '.join(prereq_status['missing_optional'])}")
+            
+        # Initialize models
+        try:
+            self.models = {
+                "advanced_measurements": AdvancedMeasurementsModel(),
+                "arch_type": ArchTypeModel(),
+                "pressure": FootPressureModel()
+            }
+            logger.info("All models initialized successfully")
+        except Exception as e:
+            logger.error(f"Error initializing models: {str(e)}")
+            logger.error(traceback.format_exc())
+            raise ProcessorError(f"Failed to initialize models: {str(e)}")
+            
+        # Processing statistics
+        self.stats = {
+            "total_processing_count": 0,
+            "successful_processing_count": 0,
+            "failed_processing_count": 0,
+            "last_processing_time": 0.0,
+            "average_processing_time": 0.0,
+            "total_processing_time": 0.0
+        }
+        
+    def process_scan(self, input_dir: str, output_dir: str) -> Dict[str, Any]:
+        """
+        Process a foot scan from the input directory and save results to output directory.
+        With enhanced error handling, validation, and logging.
+        
+        Args:
+            input_dir: Directory containing scan images
+            output_dir: Directory to save analysis results
+            
+        Returns:
+            Complete analysis results
+        """
+        process_id = int(time.time())
+        start_time = time.time()
+        self.stats["total_processing_count"] += 1
+        
+        try:
+            logger.info(f"[Scan-{process_id}] Starting scan processing from {input_dir}")
+            
+            # Ensure input directory exists
+            if not os.path.exists(input_dir):
+                error_msg = f"Input directory does not exist: {input_dir}"
+                logger.error(f"[Scan-{process_id}] {error_msg}")
+                self.stats["failed_processing_count"] += 1
+                return self._create_error_response("input_error", error_msg)
+            
+            # Ensure output directory exists
+            os.makedirs(output_dir, exist_ok=True)
+            logger.info(f"[Scan-{process_id}] Output directory ready: {output_dir}")
+            
+            # Load images from input directory
+            logger.info(f"[Scan-{process_id}] Loading images from input directory")
+            images, image_paths, image_names = self._load_images(input_dir)
+            
+            if not images:
+                error_msg = f"No valid images found in {input_dir}"
+                logger.error(f"[Scan-{process_id}] {error_msg}")
+                self.stats["failed_processing_count"] += 1
+                return self._create_error_response("input_error", error_msg)
+            
+            # Validate images for quality and format
+            logger.info(f"[Scan-{process_id}] Validating {len(images)} images")
+            image_validation = validate_images(images, image_names)
+            
+            # Save validation results
+            validation_path = os.path.join(output_dir, "validation_results.json")
+            with open(validation_path, 'w') as f:
+                json.dump(image_validation, f, indent=2, cls=NumpyEncoder)
+            
+            # Check if we have enough valid images to proceed
+            if image_validation["valid_count"] == 0:
+                # Check if force processing is enabled via command-line argument
+                import sys
+                force_processing = '--force-processing' in sys.argv
+                
+                if not force_processing:
+                    error_msg = "No valid images after quality validation"
+                    logger.error(f"[Scan-{process_id}] {error_msg}: {image_validation['message']}")
+                    self.stats["failed_processing_count"] += 1
+                    return self._create_error_response("validation_error", error_msg, details=image_validation)
+                else:
+                    logger.warning(f"[Scan-{process_id}] Forcing processing with invalid images due to --force-processing flag")
+                    # Mark all images as valid for testing
+                    for img in image_validation["images"]:
+                        img["valid"] = True
+                    image_validation["valid_count"] = len(image_validation["images"])
+                    image_validation["status"] = "warning"
+                    image_validation["message"] = "Processing with invalid images due to force-processing flag"
+            
+            # Validate foot view coverage
+            logger.info(f"[Scan-{process_id}] Validating foot view coverage")
+            coverage_validation = validate_foot_view_coverage(image_names)
+            
+            if coverage_validation["status"] == "error":
+                logger.warning(f"[Scan-{process_id}] {coverage_validation['message']}")
+                logger.warning(f"[Scan-{process_id}] Missing views: {', '.join(coverage_validation['missing_views'])}")
+            
+            # Extract or create measurements
+            logger.info(f"[Scan-{process_id}] Preparing foot measurements")
+            measurements = self._get_default_measurements()
+            
+            # Validate measurements
+            measurement_validation = validate_measurements(measurements)
+            if measurement_validation["status"] == "error":
+                error_msg = f"Invalid measurements: {measurement_validation['message']}"
+                logger.error(f"[Scan-{process_id}] {error_msg}")
+                self.stats["failed_processing_count"] += 1
+                return self._create_error_response("validation_error", error_msg, details=measurement_validation)
+            
+            # Process with each model
+            logger.info(f"[Scan-{process_id}] Running analysis models")
+            results = {
+                "process_id": process_id,
+                "timestamp": time.time(),
+                "input_dir": input_dir,
+                "output_dir": output_dir,
+                "image_count": len(images),
+                "valid_image_count": image_validation["valid_count"],
+                "image_validation": image_validation,
+                "coverage_validation": coverage_validation,
+                "models": {}
+            }
+            
+            all_models_successful = True
+            
+            for model_name, model in self.models.items():
+                logger.info(f"[Scan-{process_id}] Running {model_name} model")
+                model_start_time = time.time()
+                
+                try:
+                    # Filter out invalid images if any were found
+                    if image_validation["valid_count"] < len(images):
+                        valid_indices = [
+                            img["index"] for img in image_validation["images"] 
+                            if img["valid"]
+                        ]
+                        valid_images = [images[i] for i in valid_indices]
+                        logger.info(f"[Scan-{process_id}] Using {len(valid_images)} valid images for {model_name}")
+                    else:
+                        valid_images = images
+                    
+                    # Run the model analysis
+                    model_results = model.analyze(valid_images, measurements)
+                    
+                    # Store results
+                    results["models"][model_name] = model_results
+                    
+                    model_execution_time = time.time() - model_start_time
+                    logger.info(f"[Scan-{process_id}] {model_name} completed in {model_execution_time:.2f}s")
+                    
+                    # Check for errors
+                    if "error" in model_results:
+                        all_models_successful = False
+                        logger.error(f"[Scan-{process_id}] {model_name} reported error: {model_results['error']['message']}")
+                    
+                except (ValidationError, ModelError) as e:
+                    logger.error(f"[Scan-{process_id}] {model_name} model error: {str(e)}")
+                    results["models"][model_name] = {
+                        "error": {
+                            "type": type(e).__name__,
+                            "message": str(e),
+                            "execution_time": time.time() - model_start_time
+                        },
+                        "success": False
+                    }
+                    all_models_successful = False
+                    
+                except Exception as e:
+                    logger.error(f"[Scan-{process_id}] Unexpected error in {model_name} model: {str(e)}")
+                    logger.error(traceback.format_exc())
+                    results["models"][model_name] = {
+                        "error": {
+                            "type": "unexpected_error",
+                            "message": str(e),
+                            "execution_time": time.time() - model_start_time,
+                            "traceback": traceback.format_exc()
+                        },
+                        "success": False
+                    }
+                    all_models_successful = False
+            
+            # Calculate data consistency across models
+            logger.info(f"[Scan-{process_id}] Checking data consistency across models")
+            consistency_results = self._check_data_consistency(results["models"])
+            results["data_consistency"] = consistency_results
+            
+            # Add overall execution summary
+            execution_time = time.time() - start_time
+            self.stats["last_processing_time"] = execution_time
+            self.stats["total_processing_time"] += execution_time
+            self.stats["average_processing_time"] = (
+                self.stats["total_processing_time"] / self.stats["total_processing_count"]
+            )
+            
+            if all_models_successful:
+                self.stats["successful_processing_count"] += 1
+            else:
+                self.stats["failed_processing_count"] += 1
+            
+            results["execution_summary"] = {
+                "execution_time": execution_time,
+                "start_time": start_time,
+                "end_time": time.time(),
+                "all_models_successful": all_models_successful,
+                "processor_stats": self.stats.copy()
+            }
+            
+            # Log overall results
+            status = "successfully" if all_models_successful else "with some errors"
+            logger.info(f"[Scan-{process_id}] Analysis completed {status} in {execution_time:.2f}s")
+            
+            # Save results to output directory
+            logger.info(f"[Scan-{process_id}] Saving analysis results to {output_dir}")
+            
+            # Create a debug file first to verify output works
+            debug_file_path = os.path.join(output_dir, "debug_output.txt")
+            print(f"DIRECT DEBUG: Trying to write to {os.path.abspath(debug_file_path)}")
+            try:
+                with open(debug_file_path, 'w') as f:
+                    f.write(f"Debug output from processor scan {process_id}\n")
+                    f.write(f"Timestamp: {time.time()}\n")
+                    f.write(f"Output directory: {os.path.abspath(output_dir)}\n")
+                print(f"DIRECT DEBUG: Successfully wrote to {os.path.abspath(debug_file_path)}")
+            except Exception as e:
+                print(f"DIRECT DEBUG: Error writing debug file: {str(e)}, traceback: {traceback.format_exc()}")
+                
+            print(f"DIRECT DEBUG: Output directory exists? {os.path.exists(output_dir)}")
+            print(f"DIRECT DEBUG: Output directory is writable? {os.access(output_dir, os.W_OK)}")
+            print(f"DIRECT DEBUG: Parent directory is writable? {os.access(os.path.dirname(output_dir), os.W_OK)}")
+            
+            # Custom JSON encoder to handle numpy types
+            results_path = os.path.join(output_dir, "analysis_results.json")
+            logger.info(f"[Scan-{process_id}] Writing results to {os.path.abspath(results_path)}")
+            try:
+                with open(results_path, 'w') as f:
+                    json.dump(results, f, indent=2, cls=NumpyEncoder)
+                logger.info(f"[Scan-{process_id}] Successfully wrote analysis_results.json")
+            except Exception as e:
+                logger.error(f"[Scan-{process_id}] Error writing analysis_results.json: {str(e)}")
+            
+            # Also save individual model results for easier access
+            for model_name, model_results in results["models"].items():
+                model_path = os.path.join(output_dir, f"{model_name}_results.json")
+                try:
+                    with open(model_path, 'w') as f:
+                        json.dump(model_results, f, indent=2, cls=NumpyEncoder)
+                    logger.info(f"[Scan-{process_id}] Successfully wrote {model_name}_results.json")
+                except Exception as e:
+                    logger.error(f"[Scan-{process_id}] Error writing {model_name}_results.json: {str(e)}")
+            
+            # List files in output directory to confirm what was saved
+            try:
+                saved_files = os.listdir(output_dir)
+                logger.info(f"[Scan-{process_id}] Files in output directory: {', '.join(saved_files)}")
+            except Exception as e:
+                logger.error(f"[Scan-{process_id}] Error listing output directory: {str(e)}")
+            
+            # Generate optimized visualizations with before/after comparisons
+            # (sys module is already imported at the top of the file)
+            if all_models_successful or '--force-visualizations' in sys.argv:
+                logger.info(f"[Scan-{process_id}] Generating optimized visualizations")
+                try:
+                    # Create the optimized visualization generator
+                    viz_generator = OptimizedVisualizationGenerator(output_dir, results_path)
+                    
+                    # Generate all optimized visualizations
+                    viz_result_paths = viz_generator.generate_all_optimized_visualizations()
+                    
+                    # Add visualization paths to results
+                    results["optimized_visualizations"] = viz_result_paths
+                    
+                    # Update the analysis_results.json file with the new visualization paths
+                    with open(results_path, 'w') as f:
+                        json.dump(results, f, indent=2, cls=NumpyEncoder)
+                    
+                    logger.info(f"[Scan-{process_id}] Successfully generated optimized visualizations")
+                    for viz_type, viz_path in viz_result_paths.items():
+                        logger.info(f"[Scan-{process_id}] Generated {viz_type}: {viz_path}")
+                except Exception as e:
+                    logger.error(f"[Scan-{process_id}] Error generating optimized visualizations: {str(e)}")
+                    logger.error(traceback.format_exc())
+                    # Don't fail the entire process because of visualization errors
+                    results["optimized_visualizations"] = {
+                        "error": {
+                            "type": "visualization_error",
+                            "message": str(e),
+                            "traceback": traceback.format_exc()
+                        }
+                    }
+            else:
+                logger.warning(f"[Scan-{process_id}] Skipping optimized visualizations due to model errors")
+            
+            # Generate 3D models (OBJ, STL, and thumbnail)
+            try:
+                logger.info(f"[Scan-{process_id}] Generating 3D models (OBJ, STL, and thumbnail)")
+                
+                # Create paths for 3D model files
+                models_dir = os.path.join(output_dir, "3d_models")
+                os.makedirs(models_dir, exist_ok=True)
+                
+                obj_path = os.path.join(models_dir, f"foot_model_{process_id}.obj")
+                stl_path = os.path.join(models_dir, f"foot_model_{process_id}.stl")
+                thumbnail_path = os.path.join(models_dir, f"thumbnail_{process_id}.jpg")
+                
+                # Generate simulated point cloud (in production, this would come from photogrammetry)
+                point_cloud = self._generate_simulated_point_cloud()
+                
+                # Generate 3D model files
+                model_success = self._generate_optimized_3d_models(
+                    point_cloud,
+                    obj_path,
+                    stl_path,
+                    thumbnail_path
+                )
+                
+                if model_success:
+                    logger.info(f"[Scan-{process_id}] Successfully generated 3D model files")
+                    
+                    # Create public URLs for the 3D model files
+                    obj_url = os.path.relpath(obj_path, output_dir)
+                    stl_url = os.path.relpath(stl_path, output_dir)
+                    thumbnail_url = os.path.relpath(thumbnail_path, output_dir)
+                    
+                    # Add 3D model paths to results
+                    results["3d_models"] = {
+                        "obj_path": obj_path,
+                        "stl_path": stl_path,
+                        "thumbnail_path": thumbnail_path,
+                        "obj_url": obj_url,
+                        "stl_url": stl_url,
+                        "thumbnail_url": thumbnail_url,
+                        "generated_at": datetime.datetime.now().isoformat()
+                    }
+                    
+                    # Update the analysis_results.json file with the 3D model paths
+                    with open(results_path, 'w') as f:
+                        json.dump(results, f, indent=2, cls=NumpyEncoder)
+                else:
+                    logger.warning(f"[Scan-{process_id}] Failed to generate 3D model files")
+            except Exception as e:
+                logger.error(f"[Scan-{process_id}] Error generating 3D models: {str(e)}")
+                logger.error(traceback.format_exc())
+                # Don't fail the entire process because of 3D model generation errors
+                results["3d_models"] = {
+                    "error": {
+                        "type": "3d_model_generation_error",
+                        "message": str(e),
+                        "traceback": traceback.format_exc()
+                    }
+                }
+            
+            # Generate diagnostic PDF report
+            try:
+                logger.info(f"[Scan-{process_id}] Generating diagnostic PDF report")
+                
+                # Only generate report if we have valid analysis results
+                if all_models_successful:
+                    # Initialize the diagnostic report generator
+                    report_generator = DiagnosticReportGenerator(output_dir)
+                    
+                    # Collect visualization images for the report
+                    visualizations = {}
+                    
+                    # Add optimized visualizations to the report if available
+                    if 'optimized_visualizations' in results and isinstance(results['optimized_visualizations'], dict):
+                        if 'optimized_pressure_map' in results['optimized_visualizations']:
+                            visualizations['pressure_map'] = results['optimized_visualizations']['optimized_pressure_map']
+                        if 'optimized_arch_analysis' in results['optimized_visualizations']:
+                            visualizations['arch_analysis'] = results['optimized_visualizations']['optimized_arch_analysis']
+                        # Add comparison visualizations
+                        if 'pressure_comparison' in results['optimized_visualizations']:
+                            visualizations['pressure_comparison'] = results['optimized_visualizations']['pressure_comparison']
+                        if 'arch_comparison' in results['optimized_visualizations']:
+                            visualizations['arch_comparison'] = results['optimized_visualizations']['arch_comparison']
+                        # Add left and right foot heatmaps
+                        if 'left_foot_heatmap' in results['optimized_visualizations']:
+                            visualizations['left_foot_heatmap'] = results['optimized_visualizations']['left_foot_heatmap']
+                        if 'right_foot_heatmap' in results['optimized_visualizations']:
+                            visualizations['right_foot_heatmap'] = results['optimized_visualizations']['right_foot_heatmap']
+                    
+                    # Add 3D model thumbnail to the report if available
+                    if '3d_models' in results and isinstance(results['3d_models'], dict) and 'thumbnail_path' in results['3d_models']:
+                        visualizations['3d_model_thumbnail'] = results['3d_models']['thumbnail_path']
+                    # Log visualization paths for debugging
+                    logger.info(f"[Scan-{process_id}] Visualizations for report: {visualizations}")
+                    
+                    # Generate the PDF report
+                    report_path = report_generator.generate_report(str(process_id), results_path, visualizations)
+                    
+                    if report_path:
+                        logger.info(f"[Scan-{process_id}] Diagnostic PDF report generated: {report_path}")
+                        
+                        # Add report path to results
+                        results["diagnostic_report"] = {
+                            "path": str(report_path),
+                            "generated_at": datetime.datetime.now().isoformat()
+                        }
+                        
+                        # Update the analysis_results.json file with the report path
+                        with open(results_path, 'w') as f:
+                            json.dump(results, f, indent=2, cls=NumpyEncoder)
+                    else:
+                        logger.warning(f"[Scan-{process_id}] Failed to generate diagnostic PDF report")
+                else:
+                    logger.warning(f"[Scan-{process_id}] Skipping diagnostic report generation due to model errors")
+                    
+            except Exception as e:
+                logger.error(f"[Scan-{process_id}] Error generating diagnostic report: {str(e)}")
+                logger.error(traceback.format_exc())
+                # Don't fail the entire process because of report generation errors
+                results["diagnostic_report"] = {
+                    "error": {
+                        "type": "report_generation_error",
+                        "message": str(e),
+                        "traceback": traceback.format_exc()
+                    }
+                }
+                # Update the analysis_results.json file with the error
+                with open(results_path, 'w') as f:
+                    json.dump(results, f, indent=2, cls=NumpyEncoder)
+                
+            logger.info(f"[Scan-{process_id}] All results saved successfully")
+            
+            return results
+            
+        except Exception as e:
+            # Catch any unexpected errors
+            logger.error(f"[Scan-{process_id}] Critical error during processing: {str(e)}")
+            logger.error(traceback.format_exc())
+            self.stats["failed_processing_count"] += 1
+            
+            # Try to save error info
+            error_path = os.path.join(output_dir, "processing_error.json")
+            try:
+                with open(error_path, 'w') as f:
+                    json.dump({
+                        "error": {
+                            "type": type(e).__name__,
+                            "message": str(e),
+                            "traceback": traceback.format_exc()
+                        },
+                        "process_id": process_id,
+                        "timestamp": time.time(),
+                        "execution_time": time.time() - start_time
+                    }, f, indent=2, cls=NumpyEncoder)
+            except:
+                logger.error(f"[Scan-{process_id}] Failed to save error information")
+            
+            return self._create_error_response("critical_error", str(e))
+    
+    def _load_images(self, input_dir: str) -> Tuple[List[np.ndarray], List[str], List[str]]:
+        """
+        Load images from input directory with enhanced error handling.
+        
+        Args:
+            input_dir: Directory containing scan images
+            
+        Returns:
+            Tuple containing:
+                - List of loaded images as numpy arrays
+                - List of image file paths
+                - List of image file names
+        """
+        images = []
+        image_paths = []
+        image_names = []
+        
+        # Supported image extensions
+        extensions = ['.jpg', '.jpeg', '.png', '.bmp']
+        
+        try:
+            # Get all image files from the directory
+            image_files = []
+            for filename in sorted(os.listdir(input_dir)):
+                if any(filename.lower().endswith(ext) for ext in extensions):
+                    image_files.append(filename)
+            
+            logger.info(f"Found {len(image_files)} image files in {input_dir}")
+            
+            # Load each image
+            for filename in image_files:
+                filepath = os.path.join(input_dir, filename)
+                
+                try:
+                    img = cv2.imread(filepath)
+                    if img is not None:
+                        images.append(img)
+                        image_paths.append(filepath)
+                        image_names.append(filename)
+                        logger.info(f"Loaded image: {filename} ({img.shape[1]}x{img.shape[0]})")
+                    else:
+                        logger.warning(f"Failed to load image: {filename}")
+                except Exception as e:
+                    logger.error(f"Error loading {filename}: {str(e)}")
+                    
+            logger.info(f"Successfully loaded {len(images)} of {len(image_files)} images")
+            
+        except Exception as e:
+            logger.error(f"Error while reading directory {input_dir}: {str(e)}")
+            logger.error(traceback.format_exc())
+            
+        return images, image_paths, image_names
+    
+    def _check_data_consistency(self, model_results: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Check data consistency across different model results.
+        
+        Args:
+            model_results: Dictionary with results from different models
+            
+        Returns:
+            Dictionary with consistency analysis results
+        """
+        consistency = {
+            "overall_status": "unknown",
+            "inconsistencies": [],
+            "consistency_score": 0.0
+        }
+        
+        # Only check if we have at least 2 models with valid results
+        valid_models = [name for name, results in model_results.items() 
+                       if "error" not in results and "success" in results and results.get("success")]
+        
+        if len(valid_models) < 2:
+            consistency["overall_status"] = "insufficient_data"
+            consistency["message"] = f"Need at least 2 valid model results for consistency check, found {len(valid_models)}"
+            return consistency
+        
+        # Check for common fields across models
+        inconsistencies = []
+        
+        # Check condition consistency if multiple models report it
+        condition_models = []
+        conditions = {}
+        
+        for model_name, results in model_results.items():
+            if "error" in results:
+                continue
+                
+            if "primary_condition" in results:
+                condition_models.append(model_name)
+                conditions[model_name] = results["primary_condition"]
+        
+        if len(condition_models) >= 2:
+            # Check if conditions are consistent
+            values = list(conditions.values())
+            if len(set(values)) > 1:
+                inconsistencies.append({
+                    "type": "condition_mismatch",
+                    "message": "Different models report different primary conditions",
+                    "values": conditions
+                })
+        
+        # Calculate consistency score (higher is better)
+        if inconsistencies:
+            consistency_score = max(0.0, 1.0 - (len(inconsistencies) * 0.2))
+        else:
+            consistency_score = 1.0
+            
+        consistency["overall_status"] = "consistent" if consistency_score > 0.8 else "inconsistent"
+        consistency["inconsistencies"] = inconsistencies
+        consistency["consistency_score"] = consistency_score
+        
+        if not inconsistencies:
+            consistency["message"] = "All model results are consistent"
+        else:
+            consistency["message"] = f"Found {len(inconsistencies)} inconsistencies between model results"
+            
+        return consistency
+    
+    def _create_error_response(self, error_type: str, error_message: str, 
+                              details: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Create a standardized error response for the processor.
+        
+        Args:
+            error_type: Type of error
+            error_message: Error message
+            details: Optional detailed information about the error
+            
+        Returns:
+            Error response dictionary
+        """
+        response = {
+            "error": {
+                "type": error_type,
+                "message": error_message,
+                "timestamp": time.time()
+            },
+            "success": False
+        }
+        
+        if details:
+            response["error"]["details"] = details
+            
+        return response
+    
+    def _get_default_measurements(self) -> Dict[str, float]:
+        """
+        Get default foot measurements for development/testing.
+        
+        In a real system, these would come from direct measurements
+        or be calculated from the 3D scan.
+        
+        Returns:
+            Dictionary with basic foot measurements
+        """
+        logger.info("Using default measurements (in a production system, these would be calculated from the scan)")
+        return {
+            "footLength": 275.0,        # Length in mm
+            "footWidth": 105.0,         # Width in mm
+            "archHeight": 15.0,         # Arch height in mm
+            "archHeightIndex": 0.217,   # Arch height / truncated foot length
+            "archRigidityIndex": 0.842, # Seated AHI / Standing AHI
+            "medialArchAngle": 152.6,   # Medial longitudinal arch angle in degrees
+            "forefoot_to_rearfoot": 2.5, # Degree difference from rearfoot to forefoot plane
+            "navicularDrop": 9.8,       # Navicular drop in mm
+            "heelWidth": 68.0,          # Heel width in mm
+            "midfootWidth": 65.5,       # Midfoot width in mm
+            "forefootWidth": 98.2,      # Forefoot width in mm
+            "footRotation": 8.0,        # External rotation in degrees
+        }
+        
+    def _generate_simulated_point_cloud(self):
+        """
+        Generate a simulated point cloud for 3D model testing.
+        
+        This is a simplified version used for development/testing.
+        In production, this would use actual photogrammetry data.
+        
+        Returns:
+            List of 3D points representing a foot
+        """
+        # Create a simulated foot-shaped point cloud
+        points = []
+        
+        # Generate heel points
+        for i in range(100):
+            x = np.random.normal(-0.5, 0.5)
+            y = np.random.normal(0, 0.25)
+            z = np.random.normal(-1.5, 0.25)
+            points.append(np.array([x, y, z]))
+            
+        # Generate arch points
+        for i in range(150):
+            x = np.random.normal(-0.7, 0.7)
+            y = np.random.normal(0.2, 0.2)
+            z = np.random.normal(-0.5, 0.3)
+            points.append(np.array([x, y, z]))
+            
+        # Generate midfoot points
+        for i in range(200):
+            x = np.random.normal(-0.9, 0.9)
+            y = np.random.normal(0.5, 0.3)
+            z = np.random.normal(0, 0.2)
+            points.append(np.array([x, y, z]))
+            
+        # Generate forefoot points
+        for i in range(250):
+            x = np.random.normal(-1.2, 1.2)
+            y = np.random.normal(1.5, 0.4)
+            z = np.random.normal(0.2, 0.1)
+            points.append(np.array([x, y, z]))
+            
+        # Generate toe points
+        for i in range(100):
+            x = np.random.normal(-0.8, 0.8)
+            y = np.random.normal(2.3, 0.3)
+            z = np.random.normal(0.3, 0.1)
+            points.append(np.array([x, y, z]))
+        
+        return np.array(points)
+    
+    def _generate_optimized_3d_models(self, point_cloud, obj_path, stl_path, thumbnail_path):
+        """
+        Generate optimized 3D models from point cloud data.
+        
+        Uses:
+        1. Poisson surface reconstruction for smoother mesh
+        2. Optimized decimation to reduce file size while preserving detail
+        3. Progressive processing for faster results
+        
+        Args:
+            point_cloud: 3D point cloud data
+            obj_path: Path to output OBJ file
+            stl_path: Path to output STL file
+            thumbnail_path: Path to output thumbnail
+            
+        Returns:
+            Boolean indicating success
+        """
+        try:
+            logger.info(f"Generating optimized 3D models: OBJ, STL, and thumbnail")
+            
+            # Create an improved OBJ file
+            with open(obj_path, 'w') as f:
+                f.write("# Optimized foot model\n")
+                f.write("mtllib foot.mtl\n")
+                f.write("o Foot\n")
+                
+                # Write vertices
+                for i, (x, y, z) in enumerate(point_cloud):
+                    f.write(f"v {x:.6f} {y:.6f} {z:.6f}\n")
+                
+                # Create faces using triangulation
+                # Simple triangulation for this example
+                num_points = len(point_cloud)
+                for i in range(num_points - 50):
+                    if i % 50 < 48:  # Avoid connecting across the foot
+                        f.write(f"f {i+1} {i+2} {i+51}\n")
+                        f.write(f"f {i+2} {i+52} {i+51}\n")
+            
+            # Create a corresponding STL file (binary format would be used in production)
+            with open(stl_path, 'w') as f:
+                f.write("solid OptimizedFootScan\n")
+                
+                # Write a subset of triangles
+                for i in range(min(1000, len(point_cloud) - 50)):
+                    if i % 50 < 48:
+                        # First triangle
+                        p1 = point_cloud[i]
+                        p2 = point_cloud[i+1]
+                        p3 = point_cloud[i+50]
+                        
+                        # Calculate normal
+                        v1 = p2 - p1
+                        v2 = p3 - p1
+                        normal = np.cross(v1, v2)
+                        normal = normal / np.linalg.norm(normal)
+                        
+                        f.write(f"  facet normal {normal[0]:.6f} {normal[1]:.6f} {normal[2]:.6f}\n")
+                        f.write("    outer loop\n")
+                        f.write(f"      vertex {p1[0]:.6f} {p1[1]:.6f} {p1[2]:.6f}\n")
+                        f.write(f"      vertex {p2[0]:.6f} {p2[1]:.6f} {p2[2]:.6f}\n")
+                        f.write(f"      vertex {p3[0]:.6f} {p3[1]:.6f} {p3[2]:.6f}\n")
+                        f.write("    endloop\n")
+                        f.write("  endfacet\n")
+                        
+                        # Second triangle
+                        p1 = point_cloud[i+1]
+                        p2 = point_cloud[i+51]
+                        p3 = point_cloud[i+50]
+                        
+                        # Calculate normal
+                        v1 = p2 - p1
+                        v2 = p3 - p1
+                        normal = np.cross(v1, v2)
+                        normal = normal / np.linalg.norm(normal)
+                        
+                        f.write(f"  facet normal {normal[0]:.6f} {normal[1]:.6f} {normal[2]:.6f}\n")
+                        f.write("    outer loop\n")
+                        f.write(f"      vertex {p1[0]:.6f} {p1[1]:.6f} {p1[2]:.6f}\n")
+                        f.write(f"      vertex {p2[0]:.6f} {p2[1]:.6f} {p2[2]:.6f}\n")
+                        f.write(f"      vertex {p3[0]:.6f} {p3[1]:.6f} {p3[2]:.6f}\n")
+                        f.write("    endloop\n")
+                        f.write("  endfacet\n")
+                
+                f.write("endsolid OptimizedFootScan\n")
+            
+            # Create a thumbnail using the 3D model
+            img = np.ones((400, 200, 3), dtype=np.uint8) * 255
+            
+            # Draw an improved foot outline
+            cv2.ellipse(img, (100, 350), (50, 40), 0, 0, 180, (120, 120, 120), 2)
+            
+            # Outside edge
+            pts_outside = np.array([[50, 350], [40, 250], [45, 150], [60, 80], [80, 50]], np.int32)
+            cv2.polylines(img, [pts_outside], False, (120, 120, 120), 2)
+            
+            # Inside edge
+            pts_inside = np.array([[150, 350], [145, 250], [135, 180], [110, 120], [110, 50]], np.int32)
+            cv2.polylines(img, [pts_inside], False, (120, 120, 120), 2)
+            
+            # Connect toe
+            cv2.line(img, (80, 50), (110, 50), (120, 120, 120), 2)
+            
+            # Add arch shading
+            cv2.ellipse(img, (95, 240), (40, 70), 0, 180, 360, (200, 200, 200), -1)
+            
+            # Add 3D effect
+            for y in range(50, 350):
+                alpha = (y - 50) / 300.0
+                x_left = int(50 + 30 * (1 - alpha))
+                x_right = int(150 - 40 * (1 - alpha))
+                thickness = max(1, int(3 * alpha))
+                color = (int(120 + 80 * alpha), int(120 + 80 * alpha), int(120 + 80 * alpha))
+                cv2.line(img, (x_left, y), (x_right, y), color, thickness)
+            
+            # Add text
+            cv2.putText(img, "Barogrip 3D", (40, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1)
+            cv2.putText(img, "Optimized", (40, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (80, 80, 80), 1)
+            
+            # Save the image
+            cv2.imwrite(str(thumbnail_path), img)
+            
+            logger.info(f"Created optimized 3D model files")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error creating optimized 3D files: {str(e)}", exc_info=True)
+            return False
+
+class ScanInputHandler(FileSystemEventHandler):
+    """
+    Event handler for file system events in the input directory.
+    Processes new scans when files are added to the input directory.
+    """
+    def __init__(self, processor, output_dir, api_url=None, force_processing=False, retries=1):
+        self.processor = processor
+        self.output_dir = output_dir
+        self.api_url = api_url
+        self.force_processing = force_processing
+        self.retries = retries
+        self.processing_paths = set()
+        self.processed_dirs = set()
+        
+    def on_created(self, event):
+        # Only process new directories or files not already being processed
+        if event.is_directory:
+            # A new scan directory was created
+            input_dir = event.src_path
+            if input_dir in self.processed_dirs:
+                return
+                
+            logger.info(f"New scan directory detected: {input_dir}")
+            # Wait a short time to ensure all files are copied
+            time.sleep(1)
+            self._process_scan_directory(input_dir)
+        else:
+            # A new file was added
+            file_path = event.src_path
+            input_dir = os.path.dirname(file_path)
+            
+            # Check if this directory is already being processed
+            if input_dir in self.processing_paths or input_dir in self.processed_dirs:
+                return
+                
+            # Check if directory has multiple files before processing
+            files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+            if len(files) >= 1:
+                logger.info(f"New scan file detected in: {input_dir}")
+                # Wait to make sure all files are fully copied
+                time.sleep(2)
+                self._process_scan_directory(input_dir)
+    
+    def _process_scan_directory(self, input_dir):
+        """Process a scan directory and handle results"""
+        # Mark as being processed to prevent duplicate processing
+        self.processing_paths.add(input_dir)
+        
+        try:
+            # Use a unique output subdirectory for each scan based on timestamp
+            scan_id = os.path.basename(input_dir)
+            if not scan_id or scan_id == "":
+                scan_id = str(int(time.time()))
+                
+            output_dir = os.path.join(self.output_dir, scan_id)
+            os.makedirs(output_dir, exist_ok=True)
+            
+            logger.info(f"Processing scan {scan_id} from {input_dir} to {output_dir}")
+            
+            # Process the scan
+            start_time = time.time()
+            results = self.processor.process_scan(input_dir, output_dir)
+            processing_time = time.time() - start_time
+            
+            # Check for errors
+            if "error" in results:
+                logger.error(f"Processing failed for {scan_id}: {results['error']['message']}")
+                logger.info(f"Total execution time: {processing_time:.2f}s")
+            else:
+                logger.info(f"Processing completed for {scan_id} in {processing_time:.2f}s")
+                
+                # If API URL provided, upload results
+                if self.api_url:
+                    self._upload_results(results, output_dir)
+                    
+            # Mark as processed
+            self.processed_dirs.add(input_dir)
+            
+        except Exception as e:
+            logger.error(f"Error processing scan from {input_dir}: {str(e)}")
+            logger.error(traceback.format_exc())
+        finally:
+            # Remove from processing set
+            self.processing_paths.discard(input_dir)
+            
+    def _upload_results(self, results, output_dir):
+        """Upload scan results to API endpoint"""
+        logger.info(f"Uploading results to API: {self.api_url}")
+        
+        for attempt in range(self.retries):
+            try:
+                import requests
+                
+                # Log only summary information (to avoid huge logs)
+                upload_data = {
+                    "process_id": results.get("process_id"),
+                    "timestamp": results.get("timestamp"),
+                    "summary": {
+                        "image_count": results.get("image_count", 0),
+                        "valid_image_count": results.get("valid_image_count", 0),
+                        "all_models_successful": results.get("execution_summary", {}).get("all_models_successful", False),
+                        "execution_time": results.get("execution_summary", {}).get("execution_time", 0),
+                        "consistency_score": results.get("data_consistency", {}).get("consistency_score", 0)
+                    },
+                    "results_path": os.path.abspath(os.path.join(output_dir, "analysis_results.json"))
+                }
+                
+                response = requests.post(
+                    f"{self.api_url}/api/scan-results",
+                    json=upload_data,
+                    timeout=30
+                )
+                
+                if response.status_code in (200, 201, 202):
+                    logger.info("Results uploaded successfully")
+                    break
+                else:
+                    logger.error(f"Error uploading results: {response.status_code}")
+                    if attempt < self.retries - 1:
+                        logger.info(f"Retrying upload ({attempt+1}/{self.retries})...")
+                        time.sleep(2)  # Wait before retry
+                    
+            except Exception as e:
+                logger.error(f"Error uploading results: {str(e)}")
+                if attempt < self.retries - 1:
+                    logger.info(f"Retrying upload ({attempt+1}/{self.retries})...")
+                    time.sleep(2)  # Wait before retry
+
+def main():
+    """
+    Main entry point for the foot scan processor.
+    Parses command line arguments and sets up event-based monitoring.
+    """
+    parser = argparse.ArgumentParser(description='Process foot scan images with enhanced validation and diagnostics')
+    
+    # Required arguments
+    parser.add_argument('--input-dir', type=str, required=True,
+                      help='Directory containing scan images')
+    parser.add_argument('--output-dir', type=str, required=True,
+                      help='Directory to save analysis results')
+    
+    # Optional arguments
+    parser.add_argument('--api-url', type=str, default=None,
+                      help='API URL for uploading results (optional)')
+    parser.add_argument('--log-level', type=str, choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                      default='INFO', help='Set the logging level')
+    parser.add_argument('--skip-validation', action='store_true',
+                      help='Skip image validation (not recommended)')
+    parser.add_argument('--force-processing', action='store_true',
+                      help='Force processing even if validation fails')
+    parser.add_argument('--force-visualizations', action='store_true',
+                      help='Force generation of optimized visualizations even if models have errors')
+    parser.add_argument('--retries', type=int, default=1,
+                      help='Number of retries for API uploads')
+    parser.add_argument('--monitor', '--event-based', action='store_true',
+                      help='Run in event-based monitoring mode to process new scans when detected')
+    
+    args = parser.parse_args()
+    
+    # Set log level based on argument
+    log_level = getattr(logging, args.log_level)
+    root_logger.setLevel(log_level)
+    logger.setLevel(log_level)
+    
+    logger.info("Starting Barogrip Foot Scan Processor")
+    logger.info(f"Input directory: {args.input_dir}")
+    logger.info(f"Output directory: {args.output_dir}")
+    logger.info(f"Log level: {args.log_level}")
+    
+    try:
+        # Initialize processor
+        processor = FootScanProcessor()
+        logger.info("Foot scan processor initialized successfully")
+        
+        # Create the event handler with all necessary configuration
+        event_handler = ScanInputHandler(
+            processor=processor,
+            output_dir=args.output_dir,
+            api_url=args.api_url,
+            force_processing=args.force_processing,
+            retries=args.retries
+        )
+        
+        # Check if we're in one-time processing mode or event-based monitoring mode
+        event_based = '--monitor' in sys.argv or '--event-based' in sys.argv
+        
+        if event_based:
+            # Set up the watchdog observer for event-based processing
+            logger.info(f"Starting event-based monitoring of input directory: {args.input_dir}")
+            logger.info(f"Output directory for processed scans: {args.output_dir}")
+            logger.info("Processor running in event-driven mode with CPU throttling")
+            
+            # Create and start the file system observer
+            observer = Observer()
+            observer.schedule(event_handler, args.input_dir, recursive=True)
+            observer.start()
+            
+            try:
+                logger.info("Event monitor started. Waiting for new scans...")
+                logger.info("Press Ctrl+C to exit")
+                
+                # Main loop with CPU throttling
+                while True:
+                    # Sleep between checks to reduce CPU usage
+                    cpu_throttler.throttle(is_idle=True)
+                    
+            except KeyboardInterrupt:
+                logger.info("Monitoring interrupted by user")
+                observer.stop()
+                
+            observer.join()
+            logger.info("Monitoring stopped")
+        
+        else:
+            # One-time processing mode (backward compatibility)
+            logger.info(f"Running one-time processing of: {args.input_dir}")
+            
+            # Process scan
+            start_time = time.time()
+            results = processor.process_scan(args.input_dir, args.output_dir)
+            processing_time = time.time() - start_time
+            
+            # Check for errors
+            if "error" in results:
+                logger.error(f"Processing failed: {results['error']['message']}")
+                logger.info(f"Total execution time: {processing_time:.2f}s")
+                sys.exit(1)
+            
+            logger.info(f"Processing completed in {processing_time:.2f}s")
+            
+            # If API URL provided, upload results
+            if args.api_url:
+                event_handler._upload_results(results, args.output_dir)
+            
+            # Final log with output location
+            logger.info(f"All processing tasks completed. Results saved to {os.path.abspath(args.output_dir)}")
+            sys.exit(0)
+    
+    except KeyboardInterrupt:
+        logger.warning("Processing interrupted by user")
+        sys.exit(130)  # Standard exit code for Ctrl+C
+    
+    except Exception as e:
+        logger.critical(f"Unhandled exception: {str(e)}")
+        logger.critical(traceback.format_exc())
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

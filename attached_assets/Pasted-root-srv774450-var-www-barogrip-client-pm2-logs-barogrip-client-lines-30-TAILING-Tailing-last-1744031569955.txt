@@ -1,0 +1,34 @@
+root@srv774450:/var/www/barogrip/client# pm2 logs barogrip-client --lines 30
+[TAILING] Tailing last 30 lines for [barogrip-client] process (change the value with --lines option)
+/root/.pm2/logs/barogrip-client-error.log last 30 lines:
+/root/.pm2/logs/barogrip-client-out.log last 30 lines:
+1|barogrip | [2025-04-07T10:10:02.196Z] GET /
+1|barogrip | [2025-04-07T10:10:02.416Z] GET /assets/index-8292229d.js
+1|barogrip | [2025-04-07T10:10:02.418Z] GET /assets/index-36c404a9.css
+1|barogrip | [2025-04-07T10:10:03.115Z] GET /favicon.svg
+1|barogrip | [2025-04-07T10:10:03.315Z] GET /api/user
+1|barogrip | [2025-04-07T10:10:39.140Z] POST /api/login
+1|barogrip | [2025-04-07T10:23:19.013Z] GET /
+1|barogrip | [2025-04-07T10:23:19.211Z] GET /assets/index-8292229d.js
+1|barogrip | [2025-04-07T10:23:19.361Z] GET /assets/index-36c404a9.css
+1|barogrip | [2025-04-07T10:23:19.856Z] GET /favicon.svg
+1|barogrip | [2025-04-07T10:42:30.074Z] GET /
+1|barogrip | [2025-04-07T10:42:30.392Z] GET /assets/index-8292229d.js
+1|barogrip | [2025-04-07T10:42:30.394Z] GET /assets/index-36c404a9.css
+1|barogrip | [2025-04-07T10:42:32.262Z] GET /api/user
+1|barogrip | [2025-04-07T10:42:40.279Z] GET /
+1|barogrip | [2025-04-07T10:42:40.709Z] GET /assets/index-36c404a9.css
+1|barogrip | [2025-04-07T10:42:40.712Z] GET /assets/index-8292229d.js
+1|barogrip | [2025-04-07T10:42:42.106Z] GET /api/user
+1|barogrip | [2025-04-07T11:13:19.541Z] GET /
+1|barogrip | [2025-04-07T11:13:19.859Z] GET /assets/index-36c404a9.css
+1|barogrip | [2025-04-07T11:13:19.861Z] GET /assets/index-8292229d.js
+1|barogrip | [2025-04-07T11:13:21.076Z] GET /api/user
+1|barogrip | [2025-04-07T11:13:24.754Z] GET /
+1|barogrip | [2025-04-07T11:13:25.203Z] GET /assets/index-36c404a9.css
+1|barogrip | [2025-04-07T11:13:25.206Z] GET /assets/index-8292229d.js
+1|barogrip | [2025-04-07T11:13:26.930Z] GET /api/user
+1|barogrip | [2025-04-07T12:33:28.441Z] GET /
+1|barogrip | Client app is running on port 5000
+1|barogrip | Replit domain: (unknown domain)
+1|barogrip | Your application should be accessible at: https://(unknown domain)

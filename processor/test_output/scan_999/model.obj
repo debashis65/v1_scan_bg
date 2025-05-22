@@ -1,0 +1,47 @@
+
+# Enhanced foot model
+mtllib foot.mtl
+o Foot
+# Vertices for a more realistic foot shape
+v -0.5 0.0 -1.5  # heel
+v 0.5 0.0 -1.5
+v -0.5 0.5 -1.5
+v 0.5 0.5 -1.5
+v -0.7 0.0 -0.5  # arch
+v 0.7 0.0 -0.5
+v -0.8 0.2 -0.5  # arch height
+v 0.8 0.2 -0.5
+v -0.9 0.0 0.5   # midfoot
+v 0.9 0.0 0.5
+v -0.9 0.3 0.5
+v 0.9 0.3 0.5
+v -0.7 0.0 1.5   # ball of foot
+v 0.7 0.0 1.5
+v -0.7 0.4 1.5
+v 0.7 0.4 1.5
+v -0.2 0.0 2.5   # toe area
+v 0.2 0.0 2.5
+v -0.2 0.3 2.5
+v 0.2 0.3 2.5
+# Bottom faces
+f 1 2 6 5      # heel to arch (bottom)
+f 5 6 10 9     # arch to midfoot (bottom)
+f 9 10 14 13   # midfoot to ball (bottom)
+f 13 14 18 17  # ball to toe (bottom)
+# Top faces
+f 3 4 8 7      # heel to arch (top)  
+f 7 8 12 11    # arch to midfoot (top)
+f 11 12 16 15  # midfoot to ball (top)
+f 15 16 20 19  # ball to toe (top)
+# Side faces
+f 1 3 7 5      # left side (heel to arch)
+f 5 7 11 9     # left side (arch to midfoot)
+f 9 11 15 13   # left side (midfoot to ball)
+f 13 15 19 17  # left side (ball to toe)
+f 2 4 8 6      # right side (heel to arch)
+f 6 8 12 10    # right side (arch to midfoot)
+f 10 12 16 14  # right side (midfoot to ball)
+f 14 16 20 18  # right side (ball to toe)
+# End caps
+f 1 2 4 3      # heel cap
+f 17 18 20 19  # toe cap

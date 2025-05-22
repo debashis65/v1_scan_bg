@@ -1,0 +1,249 @@
+#!/bin/bash
+
+echo "🚀 Starting Barogrip Setup on Ubuntu 24.04 with OpenLiteSpeed"
+echo "This script assumes OpenLiteSpeed and Node.js are already installed."
+
+# === 1. Set up Variables ===
+REPO_URL="https://username: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@github.com/debashis65/barogrip.git"  # Repository URL
+DB_USER="barogrip"
+DB_PASSWORD="OhQXKEMYAlSVBv=Mu8"  # Replace with a secure password
+DB_NAME="barogrip_db"
+APP_DIR="/var/www/barogrip"
+INPUT_DIR="${APP_DIR}/input"
+OUTPUT_DIR="${APP_DIR}/output"
+
+# === 2. Install Additional Prerequisites ===
+echo "📦 Installing additional prerequisites..."
+sudo apt update
+sudo apt install -y git unzip zip build-essential \
+    python3 python3-venv python3-dev python3-pip libopencv-dev python3-opencv \
+    libssl-dev libffi-dev libpq-dev postgresql postgresql-contrib
+
+# === 3. Set up Application Directory ===
+echo "📂 Creating application directories..."
+sudo mkdir -p ${APP_DIR} ${INPUT_DIR}/sample ${OUTPUT_DIR}
+sudo chown -R $USER:$USER ${APP_DIR}
+
+# === 4. Clone Repository ===
+echo "📥 Cloning Barogrip repository..."
+cd ${APP_DIR}
+git clone ${REPO_URL} .
+
+# === 5. PostgreSQL Setup ===
+echo "🔐 Setting up PostgreSQL database..."
+if sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw ${DB_NAME}; then
+    echo "Database ${DB_NAME} already exists, skipping creation"
+else
+    sudo -u postgres psql <<EOF
+CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';
+CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};
+GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};
+EOF
+    echo "Database ${DB_NAME} created successfully"
+fi
+
+# === 6. Create Environment File ===
+echo "⚙️ Creating environment file..."
+cat > ${APP_DIR}/.env <<EOF
+# Database configuration
+DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}
+PGUSER=${DB_USER}
+PGPASSWORD=${DB_PASSWORD}
+PGHOST=localhost
+PGPORT=5432
+PGDATABASE=${DB_NAME}
+
+# Server configuration
+NODE_ENV=production
+PORT=3000
+SESSION_SECRET=$(openssl rand -hex 24)
+
+# Domain configuration
+API_URL=https://api.barogrip.com
+PATIENT_APP_URL=https://app.barogrip.com
+DOCTOR_DASHBOARD_URL=https://admin.barogrip.com
+
+# Email configuration
+SMTP_HOST=your_smtp_host
+SMTP_PORT=587
+SMTP_USER=your_smtp_user
+SMTP_PASS=your_smtp_password
+EMAIL_FROM=insoles@barogrip.com
+EOF
+
+# === 7. Server (Main Backend) Setup ===
+echo "🔧 Setting up server backend..."
+# Install dependencies at the root level (which contains server code)
+cd ${APP_DIR}
+cp ${APP_DIR}/.env .
+npm install
+npm run build || echo "Build script may not exist in root, continuing..."
+
+# === 8. Client Setup ===
+echo "👤 Setting up client..."
+cd ${APP_DIR}/client
+npm install
+npm run build || echo "Build script may not exist in client, continuing..."
+
+# === 9. Python Processor Setup ===
+echo "🧠 Setting up Python processor..."
+cd ${APP_DIR}/processor
+python3 -m venv venv
+source venv/bin/activate
+pip install tensorflow-cpu
+pip install matplotlib scikit-learn opencv-python requests watchdog flask-login flask-wtf
+pip install Pillow scipy psycopg2-binary tqdm pandas
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+deactivate
+
+# === 10. Set up PM2 Services ===
+echo "🔄 Setting up PM2 services..."
+sudo npm install -g pm2
+
+# Start server backend service
+cd ${APP_DIR}
+if [ -f "dist/server/index.js" ]; then
+    pm2 start dist/server/index.js --name barogrip-server
+elif [ -f "dist/index.js" ]; then
+    pm2 start dist/index.js --name barogrip-server
+elif [ -f "server/index.js" ]; then
+    pm2 start server/index.js --name barogrip-server
+elif [ -f "index.js" ]; then
+    pm2 start index.js --name barogrip-server
+else
+    echo "Warning: Could not find a suitable entry point for the server"
+fi
+
+# Start processor service
+cd ${APP_DIR}/processor
+pm2 start processor.py --name barogrip-processor --interpreter ${APP_DIR}/processor/venv/bin/python -- --input-dir ${INPUT_DIR} --output-dir ${OUTPUT_DIR}
+
+# Start client service if necessary
+cd ${APP_DIR}
+if [ -f "serve-client.js" ]; then
+    pm2 start serve-client.js --name barogrip-client
+fi
+
+# Save PM2 configuration
+pm2 save
+pm2 startup
+
+# === 11. Database Schema Push ===
+echo "🗄️ Setting up database schema..."
+cd ${APP_DIR}
+if [ -f "scripts/db-push.js" ]; then
+    node scripts/db-push.js
+else
+    echo "Warning: scripts/db-push.js not found, skipping database schema push"
+fi
+
+# === 12. OpenLiteSpeed Virtual Host Configuration ===
+echo "🌐 Creating OpenLiteSpeed configuration templates..."
+
+# Create directory for virtual host configurations
+sudo mkdir -p /tmp/barogrip_vhost_configs
+
+# Create API virtual host configuration
+cat > /tmp/barogrip_vhost_configs/api.barogrip.com.conf <<EOF
+docRoot \$VH_ROOT
+vhDomain api.barogrip.com
+vhAliases www.api.barogrip.com
+adminEmails admin@barogrip.com
+enableGzip 1
+enableIpGeo 1
+
+context / {
+  type proxy
+  handler localhost:3000
+  addDefaultCharset off
+}
+
+rewrite {
+  enable 1
+  logLevel 0
+  rules {
+    RewriteRule ^/.well-known/(.*)$ /.well-known/\$1 [L]
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}\$1 [R=301,L]
+  }
+}
+EOF
+
+# Create patient app virtual host configuration
+CLIENT_DIST_DIR="${APP_DIR}/client/dist"
+if [ ! -d "${CLIENT_DIST_DIR}" ]; then
+    CLIENT_DIST_DIR="${APP_DIR}/client/build"
+    if [ ! -d "${CLIENT_DIST_DIR}" ]; then
+        CLIENT_DIST_DIR="${APP_DIR}/client"
+    fi
+fi
+
+cat > /tmp/barogrip_vhost_configs/app.barogrip.com.conf <<EOF
+docRoot ${CLIENT_DIST_DIR}
+vhDomain app.barogrip.com
+vhAliases www.app.barogrip.com
+adminEmails admin@barogrip.com
+enableGzip 1
+enableIpGeo 1
+
+context / {
+  type proxy
+  handler localhost:5000
+  addDefaultCharset off
+}
+
+rewrite {
+  enable 1
+  logLevel 0
+  rules {
+    RewriteRule ^/.well-known/(.*)$ /.well-known/\$1 [L]
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}\$1 [R=301,L]
+  }
+}
+EOF
+
+# Create doctor dashboard virtual host configuration
+cat > /tmp/barogrip_vhost_configs/admin.barogrip.com.conf <<EOF
+docRoot ${CLIENT_DIST_DIR}
+vhDomain admin.barogrip.com
+vhAliases www.admin.barogrip.com
+adminEmails admin@barogrip.com
+enableGzip 1
+enableIpGeo 1
+
+context / {
+  type proxy
+  handler localhost:5000
+  addDefaultCharset off
+}
+
+rewrite {
+  enable 1
+  logLevel 0
+  rules {
+    RewriteRule ^/.well-known/(.*)$ /.well-known/\$1 [L]
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}\$1 [R=301,L]
+  }
+}
+EOF
+
+echo "⚠️ Virtual host configuration templates have been created in /tmp/barogrip_vhost_configs/"
+echo "⚠️ Please manually copy these to your OpenLiteSpeed configuration or use the WebAdmin interface to create the virtual hosts."
+
+# === 13. Set Permissions ===
+sudo chown -R $USER:$USER ${APP_DIR}
+chmod -R 755 ${APP_DIR}
+
+echo "✅ Barogrip Setup Complete!"
+echo "🌟 Next steps:"
+echo "  1. Update the .env file with your actual SMTP and other credentials"
+echo "  2. Configure OpenLiteSpeed virtual hosts using the templates in /tmp/barogrip_vhost_configs/"
+echo "  3. Ensure DNS records are set for app.barogrip.com, admin.barogrip.com, and api.barogrip.com"
+echo "  4. Set up SSL certificates for your domains if not already configured"
+echo ""
+echo "🔍 Check server status with: pm2 status"
+echo "📋 View logs with: pm2 logs"
+echo ""
+echo "🎉 Thank you for installing Barogrip!"

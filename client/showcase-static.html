@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barogrip UI Components Showcase</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    header {
+      background-color: #4f46e5;
+      color: white;
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+    }
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+    h2 {
+      font-size: 1.8rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #4f46e5;
+    }
+    .component-card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+    .component-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .component-title {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #111827;
+    }
+    .component-subtitle {
+      margin-top: 0.5rem;
+      color: #6b7280;
+    }
+    .component-image {
+      width: 100%;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .component-image img {
+      width: 100%;
+      display: block;
+    }
+    .component-details {
+      padding: 1.5rem;
+    }
+    .feature-list {
+      margin: 0;
+      padding-left: 1.5rem;
+    }
+    .feature-item {
+      margin-bottom: 0.5rem;
+    }
+    .feature-item:last-child {
+      margin-bottom: 0;
+    }
+    .code-path {
+      font-family: monospace;
+      background-color: #f3f4f6;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>Barogrip UI Components Showcase</h1>
+      <p>A showcase of the modernized UI components built with React, TypeScript, and Tailwind CSS</p>
+    </div>
+  </header>
+
+  <div class="container">
+    <h2>Authentication</h2>
+
+    <!-- Login Page Card -->
+    <div class="component-card">
+      <div class="component-header">
+        <h3 class="component-title">Login Page</h3>
+        <p class="component-subtitle">A secure login interface with role selection</p>
+      </div>
+      <div class="component-image">
+        <img src="https://i.ibb.co/CJfhbsD/login-page-mockup.png" alt="Login Page">
+      </div>
+      <div class="component-details">
+        <p class="code-path">src/pages/auth/LoginPage.tsx</p>
+        <h4>Features:</h4>
+        <ul class="feature-list">
+          <li class="feature-item">Role-based login for doctors, patients, and administrators</li>
+          <li class="feature-item">Form validation with error feedback</li>
+          <li class="feature-item">"Remember me" functionality</li>
+          <li class="feature-item">Responsive two-column layout with information panel</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Registration Page Card -->
+    <div class="component-card">
+      <div class="component-header">
+        <h3 class="component-title">Registration Page</h3>
+        <p class="component-subtitle">Role-specific registration form</p>
+      </div>
+      <div class="component-image">
+        <img src="https://i.ibb.co/3pPJKs6/registration-page-mockup.png" alt="Registration Page">
+      </div>
+      <div class="component-details">
+        <p class="code-path">src/pages/auth/RegisterPage.tsx</p>
+        <h4>Features:</h4>
+        <ul class="feature-list">
+          <li class="feature-item">Tab-based interface to switch between doctor and patient registration</li>
+          <li class="feature-item">Doctor-specific fields: specialty, license number, clinic, experience</li>
+          <li class="feature-item">Patient-specific fields: date of birth, gender, contact information</li>
+          <li class="feature-item">Password strength meter and validation</li>
+          <li class="feature-item">Terms and conditions agreement checkbox</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Doctor Interface</h2>
+
+    <!-- Doctor Dashboard Card -->
+    <div class="component-card">
+      <div class="component-header">
+        <h3 class="component-title">Doctor Dashboard</h3>
+        <p class="component-subtitle">Comprehensive overview of patients, scans, and appointments</p>
+      </div>
+      <div class="component-image">
+        <img src="https://i.ibb.co/zFQvK0B/doctor-dashboard-mockup.png" alt="Doctor Dashboard">
+      </div>
+      <div class="component-details">
+        <p class="code-path">src/pages/doctor/DashboardPage.tsx</p>
+        <h4>Features:</h4>
+        <ul class="feature-list">
+          <li class="feature-item">Key statistics: total patients, scans today, upcoming appointments, AI diagnosis rate</li>
+          <li class="feature-item">Recent scans panel with status indicators</li>
+          <li class="feature-item">Today's appointments list</li>
+          <li class="feature-item">Responsive layout that adapts to different screen sizes</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Patient Detail Page Card -->
+    <div class="component-card">
+      <div class="component-header">
+        <h3 class="component-title">Patient Detail Page</h3>
+        <p class="component-subtitle">Comprehensive patient information and medical history</p>
+      </div>
+      <div class="component-image">
+        <img src="https://i.ibb.co/5rqHpv3/patient-detail-mockup.png" alt="Patient Detail">
+      </div>
+      <div class="component-details">
+        <p class="code-path">src/pages/doctor/PatientDetailPage.tsx</p>
+        <h4>Features:</h4>
+        <ul class="feature-list">
+          <li class="feature-item">Patient overview with personal and medical information</li>
+          <li class="feature-item">Tabbed interface for scans, appointments, and notes</li>
+          <li class="feature-item">Add notes functionality</li>
+          <li class="feature-item">Quick action buttons for booking appointments and requesting scans</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Patient Interface</h2>
+
+    <!-- Patient Dashboard Card -->
+    <div class="component-card">
+      <div class="component-header">
+        <h3 class="component-title">Patient Dashboard</h3>
+        <p class="component-subtitle">Patient-centric view of scans, appointments, and treatment</p>
+      </div>
+      <div class="component-image">
+        <img src="https://i.ibb.co/4YCyFYh/patient-dashboard-mockup.png" alt="Patient Dashboard">
+      </div>
+      <div class="component-details">
+        <p class="code-path">src/pages/patient/DashboardPage.tsx</p>
+        <h4>Features:</h4>
+        <ul class="feature-list">
+          <li class="feature-item">Personal statistics and foot health score</li>
+          <li class="feature-item">Recent scans with doctor attribution</li>
+          <li class="feature-item">Upcoming appointments</li>
+          <li class="feature-item">Treatment recommendations with completion tracking</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Shared Components</h2>
+
+    <!-- Scan Detail Page Card -->
+    <div class="component-card">
+      <div class="component-header">
+        <h3 class="component-title">Scan Detail Page</h3>
+        <p class="component-subtitle">Detailed view of foot scan results with analysis</p>
+      </div>
+      <div class="component-image">
+        <img src="https://i.ibb.co/1qv6DsM/scan-detail-mockup.png" alt="Scan Detail">
+      </div>
+      <div class="component-details">
+        <p class="code-path">src/pages/scan/ScanDetailPage.tsx</p>
+        <h4>Features:</h4>
+        <ul class="feature-list">
+          <li class="feature-item">Visualizations of pressure maps, arch analysis, and 3D models</li>
+          <li class="feature-item">AI-powered diagnosis with confidence score</li>
+          <li class="feature-item">Detailed recommendations for treatment</li>
+          <li class="feature-item">Role-specific actions (download report, download 3D model, book appointment)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Context Providers</h2>
+
+    <!-- Auth Context Card -->
+    <div class="component-card">
+      <div class="component-header">
+        <h3 class="component-title">Authentication Context</h3>
+        <p class="component-subtitle">State management for user authentication</p>
+      </div>
+      <div class="component-details">
+        <p class="code-path">src/contexts/AuthContext.tsx</p>
+        <h4>Features:</h4>
+        <ul class="feature-list">
+          <li class="feature-item">User authentication state management</li>
+          <li class="feature-item">Login, register, and logout functions</li>
+          <li class="feature-item">Protected route component</li>
+          <li class="feature-item">Role-based access control</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Toast Context Card -->
+    <div class="component-card">
+      <div class="component-header">
+        <h3 class="component-title">Toast Notification Context</h3>
+        <p class="component-subtitle">User feedback notification system</p>
+      </div>
+      <div class="component-details">
+        <p class="code-path">src/contexts/ToastContext.tsx</p>
+        <h4>Features:</h4>
+        <ul class="feature-list">
+          <li class="feature-item">Toast notification system</li>
+          <li class="feature-item">Different variants (success, warning, error, info)</li>
+          <li class="feature-item">Auto-dismiss functionality</li>
+          <li class="feature-item">Custom duration settings</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer style="background-color: #1f2937; color: white; padding: 2rem 0; margin-top: 2rem;">
+    <div class="container" style="text-align: center;">
+      <p>© 2025 Barogrip Medical Technologies</p>
+    </div>
+  </footer>
+</body>
+</html>

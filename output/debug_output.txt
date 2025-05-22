@@ -1,0 +1,3 @@
+Debug output from processor scan 1747554370
+Timestamp: 1747554372.4588938
+Output directory: /home/runner/workspace/output

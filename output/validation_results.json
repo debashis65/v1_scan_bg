@@ -1,0 +1,136 @@
+{
+  "status": "warning",
+  "message": "6 of 10 images passed validation",
+  "valid_count": 6,
+  "total_count": 10,
+  "images": [
+    {
+      "index": 0,
+      "name": "1_dorsal.jpg",
+      "valid": true,
+      "message": "Image '1_dorsal.jpg' passed validation (quality: 1.00)",
+      "details": {
+        "quality_score": 1.0,
+        "mean_brightness": 63.611092,
+        "contrast": 55.61510343933144,
+        "sharpness": 3758.201530326384,
+        "dimensions": "500x500",
+        "is_color": true
+      }
+    },
+    {
+      "index": 1,
+      "name": "2_lateral.jpg",
+      "valid": true,
+      "message": "Image '2_lateral.jpg' passed validation (quality: 1.00)",
+      "details": {
+        "quality_score": 1.0,
+        "mean_brightness": 62.711616,
+        "contrast": 54.842740145515556,
+        "sharpness": 4054.775183806401,
+        "dimensions": "500x500",
+        "is_color": true
+      }
+    },
+    {
+      "index": 2,
+      "name": "3_medial.jpg",
+      "valid": true,
+      "message": "Image '3_medial.jpg' passed validation (quality: 1.00)",
+      "details": {
+        "quality_score": 1.0,
+        "mean_brightness": 62.789768,
+        "contrast": 54.1959548537174,
+        "sharpness": 4251.986229465536,
+        "dimensions": "500x500",
+        "is_color": true
+      }
+    },
+    {
+      "index": 3,
+      "name": "4_posterior.jpg",
+      "valid": true,
+      "message": "Image '4_posterior.jpg' passed validation (quality: 1.00)",
+      "details": {
+        "quality_score": 1.0,
+        "mean_brightness": 62.157924,
+        "contrast": 53.66044107170779,
+        "sharpness": 3169.4041308796004,
+        "dimensions": "500x500",
+        "is_color": true
+      }
+    },
+    {
+      "index": 4,
+      "name": "5_anterior.jpg",
+      "valid": true,
+      "message": "Image '5_anterior.jpg' passed validation (quality: 1.00)",
+      "details": {
+        "quality_score": 1.0,
+        "mean_brightness": 61.982168,
+        "contrast": 53.66406628293998,
+        "sharpness": 3623.469528111215,
+        "dimensions": "500x500",
+        "is_color": true
+      }
+    },
+    {
+      "index": 5,
+      "name": "foot_arch.png",
+      "valid": false,
+      "message": "Image 'foot_arch.png' is too bright (mean brightness: 236.8)",
+      "details": {
+        "error": "Image too bright",
+        "mean_brightness": 236.817975,
+        "threshold": 235
+      }
+    },
+    {
+      "index": 6,
+      "name": "foot_left_side.jpg",
+      "valid": false,
+      "message": "Image 'foot_left_side.jpg' is too bright (mean brightness: 244.9)",
+      "details": {
+        "error": "Image too bright",
+        "mean_brightness": 244.86764583333334,
+        "threshold": 235
+      }
+    },
+    {
+      "index": 7,
+      "name": "foot_pressure.jpg",
+      "valid": true,
+      "message": "Image 'foot_pressure.jpg' passed validation (quality: 1.00)",
+      "details": {
+        "quality_score": 1.0,
+        "mean_brightness": 222.4627557051809,
+        "contrast": 65.49508738539652,
+        "sharpness": 1254.6079312505153,
+        "dimensions": "304x512",
+        "is_color": true
+      }
+    },
+    {
+      "index": 8,
+      "name": "foot_right_side.jpg",
+      "valid": false,
+      "message": "Image 'foot_right_side.jpg' is too bright (mean brightness: 244.9)",
+      "details": {
+        "error": "Image too bright",
+        "mean_brightness": 244.86030208333332,
+        "threshold": 235
+      }
+    },
+    {
+      "index": 9,
+      "name": "foot_top.jpg",
+      "valid": false,
+      "message": "Image 'foot_top.jpg' is too bright (mean brightness: 245.9)",
+      "details": {
+        "error": "Image too bright",
+        "mean_brightness": 245.86152083333334,
+        "threshold": 235
+      }
+    }
+  ]
+}
